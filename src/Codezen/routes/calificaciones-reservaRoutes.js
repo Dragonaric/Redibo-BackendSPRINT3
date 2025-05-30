@@ -77,6 +77,75 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
+router.get('/count-pending-host', authenticateToken, async (req, res) => {
+  const { hostId } = req.query; 
+
+  
+  if (!hostId || isNaN(parseInt(hostId))) {
+    return res.status(400).json({ error: 'ID de host inválido o faltante en la consulta.' });
+  }
+
+  const parsedHostId = parseInt(hostId); // Parsear a entero
+
+  
+  if (req.user && req.user.id !== parsedHostId) {
+      return res.status(403).json({ error: 'Acceso denegado. No puedes ver las calificaciones pendientes de otro host.' });
+  }
+
+  try {
+   
+    console.log(`GET /count-pending-host para hostId: ${parsedHostId}`); 
+
+    
+    const countPendientesDirect = await prisma.reserva.count({
+      where: {
+        Carro: {
+          id_usuario_rol: parsedHostId
+        },
+        fecha_fin: {
+          lt: new Date()
+        },
+        calificaciones: {
+          none: {} 
+        }
+      }
+    });
+
+    console.log(`Resultado directo de prisma.reserva.count: ${countPendientesDirect}`); 
+
+    
+    const reservasPendientesFindMany = await prisma.reserva.findMany({
+      where: {
+        Carro: {
+          id_usuario_rol: parsedHostId
+        },
+        fecha_fin: {
+          lt: new Date()
+        },
+        calificaciones: {
+          none: {} 
+        }
+      },
+      select: { 
+          id: true,
+          fecha_fin: true,
+          Carro: { select: { id: true, marca: true, modelo: true } },
+      }
+    });
+
+    console.log(`Resultado de prisma.reserva.findMany (${reservasPendientesFindMany.length} reservas encontradas):`, reservasPendientesFindMany); // Log del findMany
+
+    
+    console.log(`Conteo final devuelto al frontend: ${countPendientesDirect}`);
+    return res.json({ count: countPendientesDirect });
+
+  } catch (error) {
+    console.error('Error al contar calificaciones pendientes para host:', error);
+    
+    return res.status(500).json({ error: 'Error al contar calificaciones pendientes' });
+  }
+});
+
 // Crear nueva calificación
 router.post('/', authenticateToken, calificacionValidations, async (req, res) => {
   try {
@@ -204,10 +273,15 @@ router.put('/:id', authenticateToken, [
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    const idNum = parseInt(id);
+
+    if (isNaN(idNum)) {
+      return res.status(400).json({ error: 'ID de calificación inválido' });
+    }
 
     // Verificar si la calificación existe y pertenece al usuario
     const calificacionExistente = await prisma.calificacionReserva.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: idNum },
       include: {
         reserva: {
           include: {
@@ -220,20 +294,28 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     if (!calificacionExistente) {
       return res.status(404).json({ error: 'Calificación no encontrada' });
     }
-
-    console.log("ID usuario autenticado:", req.user.id);
-    console.log("ID usuario dueño del carro:", calificacionExistente.reserva.Carro.id_usuario_rol);
-    console.log("ID de la calificación:", id);
-
-    if (calificacionExistente.reserva.Carro.id_usuario_rol !== req.user.id) {
+     if (calificacionExistente.reserva.Carro.id_usuario_rol !== req.user.id) {
       return res.status(403).json({ error: 'No tienes permiso para eliminar esta calificación' });
     }
 
     await prisma.calificacionReserva.delete({
-      where: {
-        id: parseInt(id)
-      }
+      where: { id: idNum }
     });
+
+   
+    if (calificacionExistente.reserva && calificacionExistente.reserva.id) {
+        const remainingRatingsCount = await prisma.calificacionReserva.count({
+      where: {
+                id_reserva: calificacionExistente.reserva.id
+            }
+        });
+        console.log(`DEBUG DELETE: Después de eliminar calificación ${calificacionExistente.id}, quedan ${remainingRatingsCount} calificaciones para la reserva ${calificacionExistente.reserva.id}`);
+        
+        
+        console.log(`DEBUG DELETE: Fecha de fin de la reserva ${calificacionExistente.reserva.id}: ${calificacionExistente.reserva.fecha_fin}`);
+       
+    }
+   
 
     res.status(204).send();
   } catch (error) {
