@@ -45,7 +45,7 @@ class CarModel {
         modelo: car.modelo,
         marca: car.marca,
         precio_por_dia: car.precio_por_dia,
-        imagen: car.Imagen ? car.Imagen[0].data : '',
+        imagen: car.Imagen && car.Imagen.length > 0 ? car.Imagen[0].data : '',
         direccion: car.Direccion.calle,
       }
     } catch (error) {
