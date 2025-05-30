@@ -18,6 +18,7 @@ const OrdenPagoRoutes = require('./routes/paymentOrderRoutes');
 const uploadRoutes = require("./routes/uploadRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const licenseRoutes = require("./routes/licenseRoutes");
+const CodezenRoutes = require('./Codezen');
 
 const associationRoutes = require('./routes/associationRoutes');
 const app = express();
@@ -61,6 +62,8 @@ app.use('/api', OrdenPagoRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", sessionRoutes);
 app.use("/api", licenseRoutes);
+
+app.use('/api', CodezenRoutes);
 
 app.use("/api", associationRoutes);
 

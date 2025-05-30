@@ -19,6 +19,8 @@ const createFullCarHandler = asyncHandler(async (req, res) => {
     calle,
     zona,
     num_casa,
+    latitud, // Extraer latitud
+    longitud, // Extraer longitud
     vim,
     año,
     marca,
@@ -37,7 +39,7 @@ const createFullCarHandler = asyncHandler(async (req, res) => {
   } = req.body;
 
   const dto = {
-    direccion: { id_provincia, calle, zona, num_casa },
+    direccion: { id_provincia, calle, zona, num_casa, latitud, longitud }, // Incluir latitud y longitud
     carro: {
       vim,
       año,

@@ -60,10 +60,11 @@ async function actualizarSeguroCarro(id, data) {
 }
 
 /** Eliminar una póliza de seguro */
-async function eliminarSeguroCarro(id) {
-  return prisma.seguroCarro.delete({ where: { id } });
+async function eliminarSegurosCarroPorCarro(id_carro) {
+  return prisma.seguroCarro.deleteMany({
+    where: { id_carro: +id_carro }, // Filtra por id_carro
+  });
 }
-
 module.exports = {
   listarSeguros,
   obtenerSeguroPorId,
@@ -75,5 +76,5 @@ module.exports = {
   listarSegurosCarro,
   obtenerSeguroCarroPorId,
   actualizarSeguroCarro,
-  eliminarSeguroCarro
+  eliminarSegurosCarroPorCarro
 };

@@ -64,7 +64,11 @@ module.exports = {
   actualizarSeguroCarro: async (req, res, next) => {
     try { res.json(await actualizarSeguroCarro(+req.params.id, req.body)); } catch (e) { next(e); }
   },
-  eliminarSeguroCarro: async (req, res, next) => {
-    try { await eliminarSeguroCarro(+req.params.id); res.sendStatus(204); } catch (e) { next(e); }
-  }
+  eliminarSegurosCarroPorCarro: async (req, res, next) => {
+  try {
+    const { id_carro } = req.params;
+    await eliminarSegurosCarroPorCarro(id_carro);
+    res.sendStatus(204);
+  } catch (e) { next(e); }
+}
 };

@@ -27,6 +27,8 @@ const newCarSchema = Joi.object({
   estado: Joi.string().required(),
   descripcion: Joi.string().allow(null, ''),
 
+  latitud: Joi.number().required(), // Validar que sea un número y requerido
+  longitud: Joi.number().required(), // Validar que sea un número y requerido
 });
 
 const validateNewCarFull = (req, res, next) => {

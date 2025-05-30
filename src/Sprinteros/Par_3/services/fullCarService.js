@@ -24,7 +24,11 @@ async function createFullCar(dto) {
 
   try {
     const { dir, c: newCar } = await prisma.$transaction(async tx => {
-      const dir = await tx.direccion.create({ data: direccion });
+      const dir = await tx.direccion.create({
+        data: {
+          ...direccion, // Esto incluirá latitud y longitud automáticamente
+        },
+      });
       const c = await tx.carro.create({
         data: {
           ...carro,
