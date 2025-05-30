@@ -1,29 +1,53 @@
 const prisma = require("../config/prisma");
 
 class CarModel {
-  static async getByIdCar({id}){
+  static async getHostOfCarro({ id_carro }) {
+    const host = await prisma.carro.findFirst({
+      where: {
+        id: id_carro,
+        Usuario: {
+          roles: {
+            some: {
+              id_rol: 2
+            }
+          }
+        }
+      },
+      select: {
+        id_usuario_rol: true
+      }
+    })
+    return host;
+  }
+  static async getByIdCar({ id }) {
     try {
       const car = await prisma.carro.findUnique({
-        where:{
+        where: {
           id: id,
         },
-        select:{
-          Imagen:{
-            select:{
-              data:true,
+        select: {
+          modelo: true,
+          marca: true,
+          precio_por_dia: true,
+          Imagen: {
+            select: {
+              data: true,
             }
           },
-          marca:true,
-          modelo:true,
-          Direccion:{
-            select:{
-              calle:true,
+          Direccion: {
+            select: {
+              calle: true,
             }
-          },
-          precio_por_dia:true,
+          }
         }
       });
-      return car
+      return {
+        modelo: car.modelo,
+        marca: car.marca,
+        precio_por_dia: car.precio_por_dia,
+        imagen: car.Imagen ? car.Imagen[0].data : '',
+        direccion: car.Direccion.calle,
+      }
     } catch (error) {
       console.error('La tabla no existe:', error)
       throw new Error('La tabla no existe')
