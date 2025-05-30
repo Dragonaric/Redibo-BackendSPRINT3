@@ -318,6 +318,7 @@ model Usuario {
   reportesRecibidos        Reporte[]                  @relation("ReportesRecibidos")
   reportesCreados          Reporte[]                  @relation("ReportesCreados")
   RespuestaComentarioCarro RespuestaComentarioCarro[]
+  Transacciones            Transaccion[]
 }
 
 model SolicitudConductor {
@@ -639,4 +640,26 @@ enum Roles {
   RENTER
   DRIVER
   ADMIN
+}
+
+model Transaccion {
+  id        String            @id @default(cuid())
+  monto     Float
+  tipo      TipoTransaccion
+  estado    EstadoTransaccion @default(PENDIENTE)
+  qrUrl     String
+  userId    Int
+  usuario   Usuario        @relation(fields: [userId], references: [id])
+  createdAt DateTime          @default(now())
+}
+
+enum TipoTransaccion {
+  RETIRO
+  SUBIDA
+}
+
+enum EstadoTransaccion {
+  PENDIENTE
+  COMPLETADA
+  RECHAZADA
 }
