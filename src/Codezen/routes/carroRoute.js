@@ -8,7 +8,7 @@ router.get('/:hostId', async (req, res) => {
     
     try {
       
-      const hostIdNum = parseInt(hostId, 2);
+      const hostIdNum = parseInt(hostId, 10);
       
       if (isNaN(hostIdNum)) {
         return res.status(400).json({
