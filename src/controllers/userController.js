@@ -1012,3 +1012,125 @@ exports.updateProfile = async (req, res) => {
     });
   }
 };
+
+exports.validateCurrentPassword = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    const userId = req.user.id;
+    
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { contraseña: true }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ valid: false, message: "Usuario no encontrado" });
+    }
+
+    const bcrypt = require('bcrypt');
+    const isValid = await bcrypt.compare(currentPassword, usuario.contraseña);
+
+    if (isValid) {
+      return res.status(200).json({ valid: true });
+    } else {
+      return res.status(200).json({ valid: false, message: "Contraseña incorrecta" });
+    }
+  } catch (error) {
+    console.error("Error al validar contraseña:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+exports.updatePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const userId = req.user.id;
+    
+    const isPasswordStrong = (password) => {
+      return password.length >= 8 &&
+             /[A-Z]/.test(password) &&
+             /[0-9]/.test(password) &&
+             /[^A-Za-z0-9]/.test(password);
+    };
+
+    if (!isPasswordStrong(newPassword)) {
+      return res.status(200).json({
+        error: 'La contraseña no cumple con los requisitos de seguridad'
+      });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { contraseña: true }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Usuario no encontrado" 
+      });
+    }
+
+    // Verificar que la nueva contraseña no sea igual a la actual
+    if (usuario.contraseña && usuario.contraseña.trim() !== '') {
+      const isSamePassword = await bcrypt.compare(newPassword, usuario.contraseña);
+      if (isSamePassword) {
+        return res.status(200).json({
+          error: 'La nueva contraseña no puede ser igual a la actual'
+        });
+      }
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { contraseña: hashedPassword }
+    });
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Contraseña actualizada correctamente" 
+    });
+  } catch (error) {
+    console.error("Error al actualizar contraseña:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+exports.checkUserHasPassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { 
+        contraseña: true,
+        google_id: true
+      }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Usuario no encontrado" 
+      });
+    }
+
+    // Verificar si el usuario tiene contraseña
+    const hasPassword = usuario.contraseña && usuario.contraseña.trim() !== '';
+    
+    return res.status(200).json({ 
+      success: true,
+      hasPassword: hasPassword,
+      isGoogleUser: !!usuario.google_id
+    });
+  } catch (error) {
+    console.error("Error al verificar contraseña del usuario:", error);
+    return res.status(500).json({ 
+      success: false, 
+      error: "Error interno del servidor" 
+    });
+  }
+};
