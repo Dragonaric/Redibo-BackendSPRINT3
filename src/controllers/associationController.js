@@ -369,3 +369,168 @@ exports.associationRequestDriverToRenter = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+
+exports.listPartners = async (req, res) => {
+  const id_usuario = req.user.id;
+  try {
+    // Obtener asociaciones activas
+    const associations = await prisma.Asociacion.findMany({
+      where: {
+        OR: [
+          { renterId: id_usuario },
+          { driverId: id_usuario }
+        ],
+        activa: true
+      },
+      select: {
+        renterId: true,
+        driverId: true
+      }
+    });
+
+    // Extraer IDs de socios
+    const partnerIds = associations.flatMap(a => [a.renterId, a.driverId]);
+    const uniquePartnerIds = [...new Set(partnerIds)].filter(id => id !== id_usuario); // Excluir el propio usuario
+
+    // Obtener detalles de los socios
+    const partners = await prisma.Usuario.findMany({
+      where: {
+        id: { in: uniquePartnerIds }
+      },
+      select: {
+        id: true,
+        nombre: true,
+        correo: true,
+        foto: true,
+        telefono: true,
+        roles: {
+          select: {
+            rol: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+      }
+    });
+    const transformedPartners = partners.map(partner => ({
+      ...partner,
+      roles: partner.roles.map(r => r.rol.rol) // Extraer solo los nombres de los roles
+    }));
+    res.status(200).json({ partners: transformedPartners });
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+
+exports.listPartnersDrivers = async (req, res) => {
+  const id_usuario = req.user.id;
+  try {
+    // Obtener asociaciones activas
+    const associations = await prisma.Asociacion.findMany({
+      where: {
+        renterId: id_usuario,
+        activa: true
+      },
+      select: {
+        driverId: true
+      }
+    });
+
+    // Extraer IDs de socios
+    const partnerIds = associations.map(a => a.driverId);
+    const uniquePartnerIds = [...new Set(partnerIds)].filter(id => id !== id_usuario); // Excluir el propio usuario
+
+    // Obtener detalles de los socios
+    const partners = await prisma.Usuario.findMany({
+      where: {
+        id: { in: uniquePartnerIds }
+      },
+      orderBy: { // 👈 Nuevo parámetro para ordenamiento
+        nombre: 'asc' // 'asc' para ascendente, 'desc' para descendente
+      },
+      select: {
+        id: true,
+        nombre: true,
+        correo: true,
+        foto: true,
+        telefono: true,
+        roles: {
+          select: {
+            rol: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+      }
+    });
+    const transformedPartners = partners.map(partner => ({
+      ...partner,
+      roles: partner.roles.map(r => r.rol.rol) // Extraer solo los nombres de los roles
+    }));
+    res.status(200).json({ partners: transformedPartners });
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+exports.listPartnersRenters = async (req, res) => {
+  const id_usuario = req.user.id;
+  try {
+    // Obtener asociaciones activas
+    const associations = await prisma.Asociacion.findMany({
+      where: {
+        driverId: id_usuario,
+        activa: true
+      },
+      select: {
+        renterId: true
+      }
+    });
+
+    // Extraer IDs de socios
+    const partnerIds = associations.map(a => a.renterId);
+    const uniquePartnerIds = [...new Set(partnerIds)].filter(id => id !== id_usuario); // Excluir el propio usuario
+
+    // Obtener detalles de los socios
+    const partners = await prisma.Usuario.findMany({
+      where: {
+        id: { in: uniquePartnerIds }
+      },
+      orderBy: { // 👈 Nuevo parámetro para ordenamiento
+        nombre: 'asc' // 'asc' para ascendente, 'desc' para descendente
+      },
+      select: {
+        id: true,
+        nombre: true,
+        correo: true,
+        foto: true,
+        telefono: true,
+        roles: {
+          select: {
+            rol: {
+              select: {
+                rol: true,
+              },
+            },
+          },
+        },
+      }
+    });
+    const transformedPartners = partners.map(partner => ({
+      ...partner,
+      roles: partner.roles.map(r => r.rol.rol) // Extraer solo los nombres de los roles
+    }));
+    res.status(200).json({ partners: transformedPartners });
+  } catch (error) {
+    console.error('Error fetching partners:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}

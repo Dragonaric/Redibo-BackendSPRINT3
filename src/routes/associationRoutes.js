@@ -13,4 +13,7 @@ router.post('/change-association-request-state', authenticateToken, associationC
 router.post('/list-drivers', authenticateToken, associationController.listUsersDrivers);
 router.post('/list-renters', authenticateToken, associationController.listUsersRenters);
 
+router.get('/list-partners', authenticateToken, associationController.listPartners);
+router.get('/partners-drivers', authenticateToken, associationController.listPartnersDrivers);
+router.get('/partners-renters', authenticateToken, associationController.listPartnersRenters);
 module.exports = router;
