@@ -57,7 +57,9 @@ model Carro {
   disponible_hasta                DateTime?
   id_condiciones_uso              Int?                              @unique(map: "uq_carro_condiciones_uso")
   notificaion_confirmacion_id     Int?
+  id_garantia                     Int?                              @unique(map: "uq_carro_garantia")
   calificacionpromedio            Float?                            @default(0)
+  garantia                        Garantia?                         @relation(fields: [id_garantia], references: [id])
   Calificacion                    Calificacion[]
   condiciones_uso                 condiciones_uso?                  @relation(fields: [id_condiciones_uso], references: [id])
   Direccion                       Direccion                         @relation(fields: [id_direccion], references: [id])
@@ -131,7 +133,9 @@ model Garantia {
   pagado        Boolean
   descripcion   String?
   id_reserva    Int?
+  id_carro      Int?
   pagoPorDaños Boolean? @map("pagoPorDaños")
+  Carro         Carro?
   Reserva       Reserva? @relation(fields: [id_reserva], references: [id])
 }
 
@@ -643,15 +647,15 @@ enum Roles {
 }
 
 model Transaccion {
-  id        String            @id @default(cuid())
-  monto     Float
-  tipo      TipoTransaccion
-  estado    EstadoTransaccion @default(PENDIENTE)
-  qrUrl     String?
-  numeroTransaccion   String?
-  userId    Int
-  usuario   Usuario        @relation(fields: [userId], references: [id])
-  createdAt DateTime          @default(now())
+  id                String            @id @default(cuid())
+  monto             Float
+  tipo              TipoTransaccion
+  estado            EstadoTransaccion @default(PENDIENTE)
+  qrUrl             String?
+  numeroTransaccion String?
+  userId            Int
+  usuario           Usuario           @relation(fields: [userId], references: [id])
+  createdAt         DateTime          @default(now())
 }
 
 enum TipoTransaccion {
