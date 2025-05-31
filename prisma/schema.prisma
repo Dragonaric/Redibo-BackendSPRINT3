@@ -284,45 +284,6 @@ enum EstadoConductor {
 }
 
 model Usuario {
-  <<<<<<< HEAD
-  id                       Int                        @id @default(autoincrement())
-  nombre                   String
-  correo                   String                     @unique
-  fecha_nacimiento         DateTime?
-  genero                   Genero?
-  id_ciudad                Int?
-  ciudad                   Ciudad?                    @relation(fields: [id_ciudad], references: [id])
-  contraseña              String?
-  google_id                String?
-  foto                     String?
-  telefono                 String?
-  ocupacion                String?
-  fecha_creacion           DateTime?                  @default(now())
-  fecha_actualizacion      DateTime?                  @updatedAt
-  saldo                    Float                      @default(0)
-  busquedas                String?
-  roles                    UsuarioRol[]
-  favoritos                Favorito[]
-  calificaciones           Calificacion[]
-  notificaciones           Notificacion[]
-  reservas                 Reserva[]
-  carros                   Carro[]
-  recoveryCode             PasswordRecoveryCode[]
-  comentarios              comentarios[]
-  ordenesPagoHost          OrdenPago[]                @relation("HostOrders")
-  ordenesPagoRenter        OrdenPago[]                @relation("RenterOrders")
-  estadoConductor          EstadoConductor?           @default(NO_REQUESTED)
-  solicitudesConductor     SolicitudConductor[]
-  licenciasConducir        LicenciaConducir[]
-  reservasConductor        ReservaConductor[]
-  asociacionesComoRenter   Asociacion[]               @relation("RenterAsociaciones")
-  asociacionesComoDriver   Asociacion[]               @relation("DriverAsociaciones")
-  solicitudesEnviadas      SolicitudAsociacion[]      @relation("SolicitanteSolicitudes")
-  solicitudesRecibidas     SolicitudAsociacion[]      @relation("ReceptorSolicitudes")
-  Comentarios              ComentarioCarro[]
-  reportesRecibidos        Reporte[]                  @relation("ReportesRecibidos")
-  reportesCreados          Reporte[]                  @relation("ReportesCreados")
-  =======
   id                       Int                        @id @default(autoincrement())
   nombre                   String
   correo                   String                     @unique
@@ -362,7 +323,6 @@ model Usuario {
   reportesCreados          Reporte[]                  @relation("ReportesCreados")
   RespuestaComentarioCarro RespuestaComentarioCarro[]
   Transacciones            Transaccion[]
-  >>>>>>> origin/main
 }
 
 model SolicitudConductor {
@@ -686,9 +646,6 @@ enum Roles {
   ADMIN
 }
 
-<<<<<<< HEAD
-=======
-
 model Transaccion {
   id                String            @id @default(cuid())
   monto             Float
@@ -711,5 +668,3 @@ enum EstadoTransaccion {
   COMPLETADA
   RECHAZADA
 }
-
->>>>>>> origin/main
