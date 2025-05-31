@@ -81,6 +81,92 @@ exports.RegisterTransactionNumber = async (req, res) => {
   }
 }
 
+exports.PayWithBalance = async (req, res) => {
+  try {
+    const { codigo_orden_pago } = req.body;
+    const userId = req.user.id;
+
+    if (!codigo_orden_pago) {
+      return res.status(200).json({ error: 'Código de orden de pago requerido' });
+    }
+
+    const ordenPago = await prisma.ordenPago.findUnique({
+      where: {
+        codigo: codigo_orden_pago
+      }
+    });
+
+    if (!ordenPago) {
+      return res.status(200).json({ error: 'Orden de pago no encontrada' });
+    }
+
+    if (ordenPago.estado !== 'PENDIENTE') {
+      return res.status(200).json({ error: 'La orden de pago no está en estado pendiente' });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        saldo: true
+      }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (usuario.saldo < ordenPago.monto_a_pagar) {
+      return res.status(200).json({ 
+        error: 'Saldo insuficiente',
+        saldo_actual: usuario.saldo,
+        monto_requerido: ordenPago.monto_a_pagar
+      });
+    }
+
+    // Generar número de transacción único para pago con saldo
+    const numeroTransaccion = `SALDO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    await prisma.usuario.update({
+      where: {
+        id: userId
+      },
+      data: {
+        saldo: {
+          decrement: ordenPago.monto_a_pagar
+        }
+      }
+    });
+
+    await prisma.ordenPago.update({
+      where: {
+        codigo: codigo_orden_pago
+      },
+      data: {
+        estado: 'COMPLETADO',
+      }
+    });
+
+    const comprobantePago = await prisma.comprobanteDePago.create({
+      data: {
+        id_orden: ordenPago.id,
+        numero_transaccion: numeroTransaccion
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Pago procesado exitosamente',
+      comprobante: comprobantePago,
+      nuevo_saldo: usuario.saldo - ordenPago.monto_a_pagar
+    });
+
+  } catch (error) {
+    console.error('Error al procesar pago con saldo:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
+
 exports.getListPaymentOrders = async (req, res) => {
   try {
     const id_usuario = req.user.id;

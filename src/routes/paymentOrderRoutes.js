@@ -9,6 +9,8 @@ const router = express.Router();
 router.post('/paymentOrder', paymentOrderController.createPaymentOrder);
 // Ruta para pagar una orden de pago registrar el numero de transaccion
 router.post('/paymentOrder/RegisterTransactionNumber', paymentOrderController.RegisterTransactionNumber);
+// Ruta para pagar una orden de pago con saldo
+router.post('/paymentOrder/PayWithBalance', authenticateToken, paymentOrderController.PayWithBalance);
 // Ruta para obtener todas mis ordenes de pago si soy renter
 router.get('/list-paymentOrder',authenticateToken, paymentOrderController.getListPaymentOrders);
 // detalles de una orden de pago apartir del id de la orden
