@@ -139,4 +139,97 @@ router.get('/:hostId', async (req, res) => {
     }
 });
 
+router.get('/inactivos/:hostId', async (req, res) => {
+    const { hostId } = req.params;
+
+    try {
+        const hostIdNum = parseInt(hostId, 10);
+
+        if (isNaN(hostIdNum)) {
+            return res.status(400).json({
+                error: "ID de host inválido",
+                details: "El ID debe ser un número"
+            });
+        }
+
+        
+        const inactiveCars = await prisma.carro.count({
+            where: {
+                id_usuario_rol: hostIdNum,
+                Reserva: {
+                    none: {
+                        OR: [
+                            { fecha_fin: { gte: new Date() } }, 
+                            { fecha_inicio: { gte: new Date() }, estado: { notIn: ['COMPLETADA', 'CANCELADA'] } } 
+                        ]
+                    }
+                }
+            }
+        });
+
+        res.json({ count: inactiveCars });
+
+    } catch (error) {
+        console.error("Error al obtener vehículos inactivos:", error);
+        res.status(500).json({
+            error: "Error en el servidor al obtener vehículos inactivos",
+            details: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                stack: error.stack
+            } : null
+        });
+    }
+});
+
+
+router.get('/inactivos-list/:hostId', async (req, res) => {
+    const { hostId } = req.params;
+
+    try {
+        const hostIdNum = parseInt(hostId, 10);
+
+        if (isNaN(hostIdNum)) {
+            return res.status(400).json({
+                error: "ID de host inválido",
+                details: "El ID debe ser un número"
+            });
+        }
+
+        
+        const inactiveCarsList = await prisma.carro.findMany({
+            where: {
+                id_usuario_rol: hostIdNum,
+                Reserva: {
+                    none: { 
+                        OR: [
+                            { fecha_fin: { gte: new Date() } }, 
+                            { fecha_inicio: { gte: new Date() }, estado: { notIn: ['COMPLETADA', 'CANCELADA'] } } 
+                        ]
+                    }
+                }
+            },
+            
+             select: {
+                id: true,
+                marca: true,
+                modelo: true,
+                placa: true,
+              }
+        });
+
+        res.json(inactiveCarsList); 
+
+    } catch (error) {
+        console.error("Error al obtener la lista de vehículos inactivos:", error);
+        res.status(500).json({
+            error: "Error en el servidor al obtener la lista de vehículos inactivos",
+            details: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                stack: error.stack
+            } : null
+        });
+    }
+});
+
+
 module.exports = router;
