@@ -647,7 +647,8 @@ model Transaccion {
   monto     Float
   tipo      TipoTransaccion
   estado    EstadoTransaccion @default(PENDIENTE)
-  qrUrl     String
+  qrUrl     String?
+  numeroTransaccion   String?
   userId    Int
   usuario   Usuario        @relation(fields: [userId], references: [id])
   createdAt DateTime          @default(now())
