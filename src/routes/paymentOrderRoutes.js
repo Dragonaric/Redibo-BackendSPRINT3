@@ -19,7 +19,8 @@ router.get('/processing-orders', authenticateToken, paymentOrderController.getLi
 router.post('/processing-order-details', authenticateToken , paymentOrderController.getProcessingOrderDetails)
 // Ruta para actualizar el estado de una orden de pago SI SOY ADMIN
 router.post('/admin/updatePaymentOrder', authenticateToken , paymentOrderController.UpdateStatePaymentOrder);
-
+// Ruta para crear una nueva solicitud de recarga
+router.post('/crear-recarga', authenticateToken, paymentOrderController.crearRecarga);
 
 
 

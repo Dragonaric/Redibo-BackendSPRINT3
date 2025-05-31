@@ -351,3 +351,106 @@ exports.UpdateStatePaymentOrder = async (req, res) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
+
+// Crear solicitud de recarga
+exports.crearRecarga = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { monto, numeroTransaccion, banco } = req.body;
+
+    if (!monto || typeof monto !== 'number' || monto <= 0) {
+      return res.status(200).json({ 
+        error: 'El monto debe ser un número mayor a 0' 
+      });
+    }
+    if (monto < 10) {
+      return res.status(200).json({ 
+        error: 'El monto mínimo es de 10 BOB' 
+      });
+    }
+    if (monto > 10000) {
+      return res.status(200).json({ 
+        error: 'El monto máximo es de 10,000 BOB' 
+      });
+    }
+
+    if (!/^\d{8,32}$/.test(numeroTransaccion)) {
+      return res.status(200).json({ 
+        error: 'El número de transacción debe tener entre 8 y 32 dígitos' 
+      });
+    }
+
+    const bancosPermitidos = ['BCP', 'YAPE', 'Banco Unión'];
+    if (!bancosPermitidos.includes(banco)) {
+      return res.status(200).json({ 
+        error: 'Banco no válido' 
+      });
+    }
+
+    // Verificar que el usuario existe
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId }
+    });
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const transaccionExistente = await prisma.transaccion.findFirst({
+      where: {
+        numeroTransaccion: numeroTransaccion,
+        estado: {
+          in: ['PENDIENTE', 'COMPLETADA']
+        }
+      }
+    });
+    if (transaccionExistente) {
+      return res.status(200).json({ 
+        error: 'Ya existe una transacción con este número' 
+      });
+    }
+
+    const nuevaTransaccion = await prisma.transaccion.create({
+      data: {
+        monto: monto,
+        tipo: 'SUBIDA',
+        estado: 'PENDIENTE',
+        numeroTransaccion: numeroTransaccion,
+        userId: userId
+      },
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            correo: true
+          }
+        }
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Solicitud de recarga creada exitosamente',
+      data: {
+        transaccion: {
+          id: nuevaTransaccion.id,
+          monto: nuevaTransaccion.monto,
+          estado: nuevaTransaccion.estado,
+          tipo: nuevaTransaccion.tipo,
+          banco: banco,
+          fechaCreacion: nuevaTransaccion.createdAt
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al crear solicitud de recarga:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
