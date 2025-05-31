@@ -39,14 +39,6 @@ const aceptarTransaccion = async (req, res) => {
       },
     });
 
-    await prisma.usuario.update({
-      where: { id: transaccion.userId },
-      data: {
-        saldo: {
-          decrement: transaccion.monto,
-        },
-      },
-    });
     return res.json({ mensaje: "Transacción aceptada exitosamente", transaccion });
   }
   catch (error) {
@@ -65,7 +57,16 @@ const rechazarTransaccion = async (req, res) => {
         estado: "RECHAZADA",
       },
     });
+    await prisma.usuario.update({
+      where: { id: transaccion.userId },
+      data: {
+        saldo: {
+          increment: transaccion.monto,
+        },
+      },
+    });
     return res.json({ mensaje: "Transacción rechazada exitosamente", transaccion });
+
   }
   catch (error) {
     console.error("Error al rechazar transacción:", error);
