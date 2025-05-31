@@ -12,6 +12,7 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const authRoutes = require('./routes/authRoutes');
+const transaccionesRoutes = require('./routes/transaccionesRoutes');
 
 const sprinterosRoutes = require('./Sprinteros'); // Importar las rutas de sprinteros
 const OrdenPagoRoutes = require('./routes/paymentOrderRoutes');
@@ -21,6 +22,7 @@ const licenseRoutes = require("./routes/licenseRoutes");
 const CodezenRoutes = require('./Codezen');
 
 const associationRoutes = require('./routes/associationRoutes');
+const { transaccion } = require('./config/prisma');
 const app = express();
 
 const allowedOrigins = [
@@ -57,7 +59,7 @@ app.use('/api', cityRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use('/api', sprinterosRoutes);
-
+app.use('/api', transaccionesRoutes)
 app.use('/api', OrdenPagoRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", sessionRoutes);

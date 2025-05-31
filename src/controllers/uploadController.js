@@ -63,6 +63,15 @@ const uploadTransaccion = async (req, res) => {
           },
         });
 
+        await prisma.usuario.update({
+          where: { id: userId },
+          data: {
+            saldo: {
+              decrement: transaccionData.monto,
+            },
+          },
+        });
+
         return res.json({ message: "QR subido" });
       }
     );
@@ -83,6 +92,7 @@ const getTransacciones = async (req, res) => {
 
     const transacciones = await prisma.transaccion.findMany({
       where: { userId: userId },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         monto: true,
