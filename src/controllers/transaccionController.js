@@ -27,4 +27,50 @@ const getTransacciones = async (req, res) => {
   } 
 
 }
-module.exports = { getTransacciones};
+
+const aceptarTransaccion = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const transaccion = await prisma.transaccion.update({
+      where: { id: id },
+      data: {
+        estado: "COMPLETADA",
+      },
+    });
+
+    await prisma.usuario.update({
+      where: { id: transaccion.userId },
+      data: {
+        saldo: {
+          decrement: transaccion.monto,
+        },
+      },
+    });
+    return res.json({ mensaje: "Transacción aceptada exitosamente", transaccion });
+  }
+  catch (error) {
+    console.error("Error al aceptar transacción:", error);
+    return res.status(500).json({ error: "Error del servidor" }); 
+  }
+}
+
+const rechazarTransaccion = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const transaccion = await prisma.transaccion.update({
+      where: { id: id },
+      data: {
+        estado: "RECHAZADA",
+      },
+    });
+    return res.json({ mensaje: "Transacción rechazada exitosamente", transaccion });
+  }
+  catch (error) {
+    console.error("Error al rechazar transacción:", error);
+    return res.status(500).json({ error: "Error del servidor" }); 
+  }
+}
+
+module.exports = { getTransacciones, aceptarTransaccion, rechazarTransaccion };

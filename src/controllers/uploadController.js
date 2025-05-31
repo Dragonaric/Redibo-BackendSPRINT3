@@ -83,6 +83,7 @@ const getTransacciones = async (req, res) => {
 
     const transacciones = await prisma.transaccion.findMany({
       where: { userId: userId },
+      orderBy: { createdAt: "desc" },
       select: {
         id: true,
         monto: true,
