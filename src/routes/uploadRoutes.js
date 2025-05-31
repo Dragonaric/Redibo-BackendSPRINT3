@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../middlewares/upload");
 const { uploadImage, uploadTransaccion, getTransacciones } = require("../controllers/uploadController");
-const { authenticateToken } = require("../middlewares/authMiddleware");
-const { get } = require("http");
+const { authenticateToken } = require("../middlewares/authMiddleware");;
 
 router.post("/upload", authenticateToken, upload.single("image"), uploadImage);
 router.post("/upload-qr", authenticateToken, upload.single("qr"), uploadTransaccion);
