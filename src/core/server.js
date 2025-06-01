@@ -27,6 +27,11 @@ const insEnlace= require('../modules/insertEnlace/insertEnlace.module');
 const detailCarInsurance = require('../modules/detailCarInsurance/detailCarInsurance.module');
 const detailCompany = require('../modules/detailCompany/detailCompany.module');
 
+const comentarioHostGet = require('../modules/userHost/calificaiones/get/calificaiones.module');
+const comentarioHostPost = require('../modules/userHost/calificaiones/post/calificaiones.module');
+const calificacionesGet = require('../modules/userHost/calificaiones/get/calificaiones.module');
+const calificacionesPost = require('../modules/userHost/calificaiones/post/calificaiones.module');
+
 const app = express();
 
 app.use(express.json());
@@ -60,5 +65,12 @@ app.use('/insertSeguro', insertInsurance.controller);
 //tarjetas
 app.use('/detailCarInsurance', detailCarInsurance.controller);
 app.use('/detailCompany', detailCompany.controller);
+
+//comentarios Host
+app.use('/userhost/comentarioGet', comentarioHostGet.controller);
+app.use('/userhost/comentarioHostPost', comentarioHostPost.controller);
+//calificaciones
+app.use('/userhost/calificacionesGet', calificacionesGet.controller);
+app.use('/userhost/calificacionesPost', calificacionesPost.controller);
 
 module.exports = app;
