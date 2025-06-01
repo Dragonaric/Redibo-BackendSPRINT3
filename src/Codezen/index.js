@@ -13,6 +13,8 @@ const reporteRoutes = require("./routes/reporteRoutes");
 const comentariosCarroRoutes = require("./routes/comentariosCarroRoutes");
 const calificacionesReservaRoutes = require("./routes/calificaciones-reservaRoutes");
 const carroRoutes = require("./routes/carroRoute");
+const calendarRoutes = require("./routes/calendarRoutes");
+
 
 // Configuración de middlewares específicos para CodeZen
 
@@ -36,6 +38,8 @@ router.use("/reportes", reporteRoutes);
 router.use("/comentarios-carro", comentariosCarroRoutes);
 router.use("/calificaciones-reserva", calificacionesReservaRoutes);
 router.use("/carros", carroRoutes);
+router.use("/calendar", calendarRoutes);
+
 
 // Ruta principal del módulo CodeZen
 router.get("/", (req, res) => {
