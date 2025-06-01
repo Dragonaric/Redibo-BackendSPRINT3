@@ -25,6 +25,7 @@ const comments=require('../modules/comments/comments.module');
 const insEnlace= require('../modules/insertEnlace/insertEnlace.module');
 
 const detailCarInsurance = require('../modules/detailCarInsurance/detailCarInsurance.module');
+const detailCompany = require('../modules/detailCompany/detailCompany.module');
 
 const app = express();
 
@@ -55,6 +56,9 @@ app.use('/deleteSeguro', deleteSeguro.controller);
 app.use('/insertEnlace',insEnlace.controller);
 app.use('/infoSeguro', insurance.controller);
 app.use('/insertSeguro', insertInsurance.controller);
+
+//tarjetas
 app.use('/detailCarInsurance', detailCarInsurance.controller);
+app.use('/detailCompany', detailCompany.controller);
 
 module.exports = app;

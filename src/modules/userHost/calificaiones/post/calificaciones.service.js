@@ -1,6 +1,6 @@
 const prisma = require('../../../../config/database');
 
-const comentarioHost = {
+const calificacionHost = {
 
     async create(data) {
         try {
@@ -17,4 +17,4 @@ const comentarioHost = {
     }
 };
 
-module.exports = comentarioHost;
+module.exports = calificacionHost;

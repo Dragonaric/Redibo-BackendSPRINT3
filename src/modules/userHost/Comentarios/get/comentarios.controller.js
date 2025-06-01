@@ -1,5 +1,5 @@
 const {Router} = require('express');
-const calificaionService = require('./calificaiones.service');
+const comentarioService = require('./comentarios.service');
 
 const router = Router();
 
@@ -7,7 +7,7 @@ router.get('/:id',async(req, res)=> {
     const hostId = parseInt(req.params.id);
     
     try {
-        const caliHost = await calificaionService.findById(hostId);
+        const caliHost = await comentarioService.findById(hostId);
         res.json(caliHost);
     } catch (error) {
         throw error (error);

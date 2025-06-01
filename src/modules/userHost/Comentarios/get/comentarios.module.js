@@ -1,7 +1,7 @@
-const calificaionesGetService = require('./calificaiones.service');
-const calificaionesGetController = require('./calificaiones.controller');
+const comentarioGetService = require('./comentarios.service');
+const comentarioGetController = require('./comentarios.controller');
 
 module.exports = {
-    controller : calificaionesGetController,
-    service : calificaionesGetService
+    controller : comentarioGetController,
+    service : comentarioGetService
 }
