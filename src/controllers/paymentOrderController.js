@@ -43,9 +43,9 @@ exports.createPaymentOrder = async (req, res) => {
 
 exports.RegisterTransactionNumber = async (req, res) => {
   try {
-    const { codigo_orden_pago, numero_transaccion } = req.body;
+    const { codigo_orden_pago, numero_transaccion, monto_a_pagar } = req.body;
     // Validar que se recibieron los datos necesarios
-    if (!codigo_orden_pago || !numero_transaccion) {
+    if (!codigo_orden_pago || !numero_transaccion || !monto_a_pagar) {
       return res.status(400).json({ error: 'Faltan datos necesarios' });
     }
     
@@ -69,7 +69,8 @@ exports.RegisterTransactionNumber = async (req, res) => {
             codigo: codigo_orden_pago
           }
         },
-        numero_transaccion: numeroTransaccion
+        numero_transaccion: numeroTransaccion,
+        saldo: monto_a_pagar
       },
     });
     
@@ -151,7 +152,8 @@ exports.PayWithBalance = async (req, res) => {
     const comprobantePago = await prisma.comprobanteDePago.create({
       data: {
         id_orden: ordenPago.id,
-        numero_transaccion: numeroTransaccion
+        numero_transaccion: numeroTransaccion,
+        saldo: ordenPago.monto_a_pagar
       }
     });
 
