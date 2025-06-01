@@ -14,6 +14,7 @@ const cityRoutes = require('./routes/cityRoutes');
 const authRoutes = require('./routes/authRoutes');
 const paymentVoucherRoutes = require('./routes/paymentVoucherRoutes');
 const transaccionesRoutes = require('./routes/transaccionesRoutes');
+const pdfRoutes = require('./routes/pdfRoutes');
 
 const sprinterosRoutes = require('./Sprinteros'); // Importar las rutas de sprinteros
 const OrdenPagoRoutes = require('./routes/paymentOrderRoutes');
@@ -63,6 +64,7 @@ app.use('/api', sprinterosRoutes);
 app.use('/api', transaccionesRoutes)
 app.use('/api', OrdenPagoRoutes);
 app.use('/api', paymentVoucherRoutes);
+app.use('/api', pdfRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", sessionRoutes);
 app.use("/api", licenseRoutes);
