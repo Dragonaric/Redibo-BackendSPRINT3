@@ -3,7 +3,7 @@ const calificaionService = require('./calificaciones.service');
 
 const router = Router();
 router.post('/', async (req, res) => {
-    const { id_host, id_renter, calificacion, fecha } = req.body;
+    const { id_host, id_renter, calificacion } = req.body;
     try {
         const nuevaCalificacion = await calificaionService.create({
             id_host,

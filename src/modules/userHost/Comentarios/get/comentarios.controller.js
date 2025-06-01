@@ -10,7 +10,7 @@ router.get('/:id',async(req, res)=> {
         const caliHost = await comentarioService.findById(hostId);
         res.json(caliHost);
     } catch (error) {
-        throw error (error);
+        throw error;
         console.log(error);
     }
 })

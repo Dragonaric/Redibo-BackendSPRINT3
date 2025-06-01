@@ -3,7 +3,7 @@ const prisma = require('../../../../config/prisma');
 const comentarioHost = {
     async findById(hostId) {
         try {
-            return await prisma.comentarioHost.findMany({
+            return await prisma.comentariohost.findMany({
                 where: { id_host: hostId },
                 select: {
                     id: true,
@@ -11,7 +11,7 @@ const comentarioHost = {
                     id_renter: true,
                     comentario: true,
                     fecha: true,
-                    Usuario_calificacionhost_id_renterToUsuario: {
+                    Usuario_comentariohost_id_renterToUsuario: {
                         select: {
                             nombre: true,
                         }
