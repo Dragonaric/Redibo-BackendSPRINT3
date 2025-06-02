@@ -415,7 +415,14 @@ const actualizarCaracteristicasAdicionalesPorId = async (id, nuevasCaracteristic
     });
 
     const nombresActualizados = caracteristicasActualizadas.map(
-      (item) => item.carasteristicasAdicionales.nombre
+      (item) => {
+    if (item.CarasteristicasAdicionales) {
+        return item.CarasteristicasAdicionales.nombre;
+    } else {
+        console.warn(`No se encontró CarasteristicasAdicionales para el item con ID ${item.id}`);
+        return null; // o algún valor por defecto
+    }
+}
     );
 
     return {
