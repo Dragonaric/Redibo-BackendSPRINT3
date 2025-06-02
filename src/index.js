@@ -20,6 +20,7 @@ const uploadRoutes = require("./routes/uploadRoutes");
 const sessionRoutes = require("./routes/sessionRoutes");
 const licenseRoutes = require("./routes/licenseRoutes");
 const CodezenRoutes = require('./Codezen');
+const driversRoutes = require('./routes/driversRoutes');
 
 const associationRoutes = require('./routes/associationRoutes');
 const { transaccion } = require('./config/prisma');
@@ -68,6 +69,8 @@ app.use("/api", licenseRoutes);
 app.use('/api', CodezenRoutes);
 
 app.use("/api", associationRoutes);
+
+app.use("/api", driversRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 4000;
