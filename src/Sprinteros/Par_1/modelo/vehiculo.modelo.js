@@ -415,7 +415,14 @@ const actualizarCaracteristicasAdicionalesPorId = async (id, nuevasCaracteristic
     });
 
     const nombresActualizados = caracteristicasActualizadas.map(
-      (item) => item.carasteristicasAdicionales.nombre
+      (item) => {
+    if (item.CarasteristicasAdicionales) {
+        return item.CarasteristicasAdicionales.nombre;
+    } else {
+        console.warn(`No se encontró CarasteristicasAdicionales para el item con ID ${item.id}`);
+        return null; // o algún valor por defecto
+    }
+}
     );
 
     return {
@@ -434,6 +441,41 @@ const eliminarVehiculoPorId = async (id) => {
     if (!id || isNaN(id)) {
       throw new Error("El ID del vehículo es inválido");
     }
+
+
+    const idOrder = await prisma.ordenPago.findFirst({
+      where: { id_carro: parseInt(id) },
+      select: { id: true }
+    });
+
+    if (idOrder) {
+      console.log("ID de orden de pago encontrada:", idOrder.id);
+      const idOrdenPago = idOrder.id; // Obtener el ID
+
+      const comprobantes = await prisma.comprobanteDePago.findMany({
+        where: { id_orden: idOrdenPago }
+      });
+
+      for (const comprobante of comprobantes) {
+        await prisma.comprobanteDePago.delete({
+          where: { id: comprobante.id }
+        });
+        console.log(`Comprobante de pago con ID ${comprobante.id} eliminado.`);
+      }
+
+      // Elimina la OrdenPago usando su ID
+      await prisma.ordenPago.delete({
+        where: { id: idOrdenPago } // Usa el id de la OrdenPago
+      });
+      console.log(`OrdenPago con ID ${idOrdenPago} eliminada.`);
+
+    } else {
+      console.log(`No se encontró ordenPago para el carro con ID ${id}`);
+    }
+
+    await prisma.seguroCarro.deleteMany({
+        where: { id_carro: parseInt(id) }, // Filtra por id_carro
+      });
 
     // Eliminar las relaciones asociadas al vehículo en las tablas dependientes
     await prisma.caracteristicasAdicionalesCarro.deleteMany({
