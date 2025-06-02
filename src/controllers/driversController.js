@@ -14,7 +14,7 @@ const getLinkedDrivers = async (req, res) => {
                         id: true,
                         nombre: true,
                         correo: true,
-                        roles: { select: { rol: { select: {rol: true} } } },
+                        roles: { select: { id_rol: true, } },
                     }
                 }
             }
@@ -23,7 +23,7 @@ const getLinkedDrivers = async (req, res) => {
         const conductores = asociaciones
             .map(a => a.driver)
             .filter(d => 
-                d.roles.some(role => role.rol.rol === "CONDUCTOR")
+                d.roles.some(role => role.id_rol === 3)
             )
             .map(c => ({
                 id: c.id,
