@@ -232,6 +232,7 @@ model ComprobanteDePago {
   fecha_emision      DateTime  @default(now())
   id_orden           Int
   numero_transaccion String
+  saldo              Float
   OrdenPago          OrdenPago @relation(fields: [id_orden], references: [id])
 }
 
