@@ -21,7 +21,8 @@ const sessionRoutes = require("./routes/sessionRoutes");
 const licenseRoutes = require("./routes/licenseRoutes");
 const CodezenRoutes = require('./Codezen');
 const driversRoutes = require('./routes/driversRoutes');
-const searchesRoutes = require('./routes/busquedasRoutes'); // Importar las rutas de busquedas
+const searchesRoutes = require('./routes/busquedasRoutes');
+const busquedasRoutes = require('./routes/busquedasRoutes');
 
 const associationRoutes = require('./routes/associationRoutes');
 const { transaccion } = require('./config/prisma');
@@ -73,6 +74,7 @@ app.use("/api", associationRoutes);
 
 app.use("/api", driversRoutes);
 app.use("/api", searchesRoutes);
+app.use("/api", busquedasRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 4000;
