@@ -75,6 +75,7 @@ model Carro {
   contratodeAlquiler              contratodeAlquiler[]
   OrdenPago                       OrdenPago[]
   Comentarios                     ComentarioCarro[]
+  Mantenimiento                   Mantenimiento[]
 }
 
 model Ciudad {
@@ -324,6 +325,7 @@ model Usuario {
   reportesCreados          Reporte[]                  @relation("ReportesCreados")
   RespuestaComentarioCarro RespuestaComentarioCarro[]
   Transacciones            Transaccion[]
+  ultimaSesion             DateTime?
 }
 
 model SolicitudConductor {
@@ -618,6 +620,14 @@ model RespuestaComentarioCarro {
 
   @@index([id_comentario])
   @@index([id_usuario_host])
+}
+model Mantenimiento {
+  id            Int      @id @default(autoincrement())
+  id_carro      Int
+  fecha_vencimiento DateTime?
+  completado    Boolean  @default(false)
+  descripcion   String?
+  Carro         Carro    @relation(fields: [id_carro], references: [id])
 }
 
 enum EstadoReserva {
