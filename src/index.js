@@ -14,6 +14,7 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const authRoutes = require('./routes/authRoutes');
+const garantiaRouter  = require('./routes/garantias');
 
 const sprinterosRoutes = require('./Sprinteros'); // Importar las rutas de sprinteros
 const OrdenPagoRoutes = require('./routes/paymentOrderRoutes');
@@ -69,6 +70,8 @@ app.use('/api/airports', airportRouter)
 app.use('/api/reservations', reservationRouter)
 app.use('/api/search', searchRouter)
 app.use('/api/users', userRouter)
+app.use('/api/garantias', garantiaRouter);
+
 
 app.use('/api', CodezenRoutes);
 
