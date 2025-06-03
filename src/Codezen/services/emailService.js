@@ -67,3 +67,36 @@ exports.sendPasswordChangedNotification = async (email) => {
     throw new Error("Error al enviar el correo electrónico de notificación")
   }
 }
+// Envía una notificación de mantenimiento vencido al host
+exports.sendMantenimientoVencidoNotification = async (email, hostName, carro, mantenimiento) => {
+  const mailOptions = {
+    from: `"REDIBO" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Notificación de mantenimiento vencido",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Mantenimiento vencido</h2>
+        <p>Hola ${hostName},</p>
+        <p>Tienes un mantenimiento vencido en tu carro:</p>
+        <ul>
+          <li><b>Modelo:</b> ${carro.modelo}</li>
+          <li><b>Placa:</b> ${carro.placa}</li>
+          <li><b>Fecha de vencimiento:</b> ${new Date(mantenimiento.fecha_vencimiento).toLocaleString()}</li>
+          <li><b>Descripción:</b> ${mantenimiento.descripcion || 'Sin descripción'}</li>
+        </ul>
+        <p>Por favor, realiza el mantenimiento lo antes posible.</p>
+        <p style="margin-top: 30px; font-size: 12px; color: #777;">
+          Este es un correo automático, por favor no respondas a este mensaje.
+        </p>
+      </div>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Error enviando email de mantenimiento vencido:", error);
+    throw new Error("Error al enviar el correo electrónico de mantenimiento vencido");
+  }
+};
