@@ -569,8 +569,18 @@ model CalificacionReserva {
   puntualidad      Int
   comentario       String?
   fecha_creacion   DateTime @default(now())
-
+  comentariosRespuesta ComentarioRespuesta[] @relation("CalificacionComentario")
   @@index([id_reserva])
+}
+
+model ComentarioRespuesta {
+  id                  Int                   @id @default(autoincrement())
+  comentario          String
+  calreserId          Int?
+  respuestaPadreId    Int?
+  calificacionReserva CalificacionReserva?  @relation("CalificacionComentario", fields: [calreserId], references: [id])
+  respuestaPadre      ComentarioRespuesta?  @relation("RespuestaPadre", fields: [respuestaPadreId], references: [id])
+  respuestasHijas     ComentarioRespuesta[] @relation("RespuestaPadre")
 }
 
 model ComentarioCarro {
