@@ -31,7 +31,7 @@ const registerValidations = [
     .notEmpty().withMessage('La contraseña es obligatoria si no se usa Google Auth')
     .isLength({ min: 8 }).withMessage('La contraseña debe tener al menos 8 caracteres')
     .matches(/[A-Z]/).withMessage('La contraseña debe tener al menos una letra mayúscula')
-    .matches(/[!@#$%^?&.*]/).withMessage('La contraseña debe tener al menos un símbolo especial'),
+    .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/).withMessage('La contraseña debe tener al menos un símbolo especial'),
   body('telefono').notEmpty().withMessage('El teléfono es obligatorio'),
   body('foto').optional().isURL().withMessage('URL de foto inválida'),
   body('rol').isIn(['HOST', 'RENTER', 'DRIVER']).withMessage('Rol inválido')
