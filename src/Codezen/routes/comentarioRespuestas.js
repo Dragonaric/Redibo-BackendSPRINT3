@@ -273,4 +273,93 @@ router.get('/calificacion/:calificacionId', authenticateToken, async (req, res) 
   }
 });
 
+router.get('/comentarioCadenaRenter', authenticateToken, async (req, res) => { 
+  const { idusuario } = req.query;
+
+  if (!idusuario) {
+    return res.status(400).json({ error: 'Falta el parámetro idusuario en la consulta' });
+  }
+
+  try {
+    const comentarios = await prisma.calificacionReserva.findMany({
+      where: {
+        reserva: {
+          id_usuario: parseInt(idusuario) // Aquí está el cambio
+        }
+      },
+      include: {
+        reserva: {
+          include: {
+            Carro:{
+              include: {Usuario:true}
+            },
+            Usuario: true
+          }
+        },
+        comentariosRespuesta: {
+          include: {
+            respuestaPadre: true,
+            respuestasHijas: {
+              include: {
+                respuestasHijas: {
+                  include: {
+                    respuestasHijas: {
+                      include: {
+                        respuestasHijas: {
+                          include: {
+                            respuestasHijas: true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        fecha_creacion: 'desc'
+      }
+    });
+
+    return res.json(comentarios);
+  } catch (error) {
+    console.error('Error al obtener comentarios:', error);
+    return res.status(500).json({ error: 'Error al obtener comentarios' });
+  }
+});
+
+
+router.post('/comentarioRenter', authenticateToken, [
+  body('comentario').isString().notEmpty().withMessage('El comentario no puede estar vacío')
+], async (req, res) => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() })
+  }
+  const { comentario, calreserId } = req.body
+  try {
+    if (calreserId) {
+      const padre = await prisma.calificacionReserva.findUnique({
+        where: { id: calreserId }
+      })
+      if (!padre) {
+        return res.status(404).json({ error: 'Comentario padre no encontrado' })
+      }
+    }
+    const nuevoComentario = await prisma.comentarioRespuesta.create({
+      data: {
+        comentario,
+        calreserId // Asegurarse de que calreserId sea un número
+      }
+    })
+    res.status(201).json(nuevoComentario)
+  } catch (error) {
+    console.error('Error al crear comentario:', error)
+    res.status(500).json({ error: 'Error al crear comentario' })
+  }
+})
+
 module.exports = router;
