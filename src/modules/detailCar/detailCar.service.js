@@ -19,6 +19,7 @@ const carService = {
           transmicion:true,
           disponible_hasta:true,
           disponible_desde:true,
+          condiciones_uso:true,
           Direccion: {
             select:{
                 calle:true,

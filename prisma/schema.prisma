@@ -37,14 +37,15 @@ model Calificacion {
 }
 
 model CalificacionReserva {
-  id               Int      @id @default(autoincrement())
-  id_reserva       Int
-  comportamiento   Int
-  cuidado_vehiculo Int
-  puntualidad      Int
-  comentario       String?
-  fecha_creacion   DateTime @default(now())
-  Reserva          Reserva  @relation(fields: [id_reserva], references: [id], onDelete: Cascade)
+  id                  Int                   @id @default(autoincrement())
+  id_reserva          Int
+  comportamiento      Int
+  cuidado_vehiculo    Int
+  puntualidad         Int
+  comentario          String?
+  fecha_creacion      DateTime              @default(now())
+  Reserva             Reserva               @relation(fields: [id_reserva], references: [id], onDelete: Cascade)
+  ComentarioRespuesta ComentarioRespuesta[]
 
   @@index([id_reserva])
 }
@@ -92,6 +93,7 @@ model Carro {
   ComentarioCarro                 ComentarioCarro[]
   Favorito                        Favorito[]
   Imagen                          Imagen[]
+  Mantenimiento                   Mantenimiento[]
   OrdenPago                       OrdenPago[]
   Reserva                         Reserva[]
   SeguroCarro                     SeguroCarro[]
@@ -134,11 +136,22 @@ model ComentarioCarro {
   @@index([id_usuario])
 }
 
+model ComentarioRespuesta {
+  id                        Int                   @id @default(autoincrement())
+  comentario                String
+  calreserId                Int?
+  respuestaPadreId          Int?
+  CalificacionReserva       CalificacionReserva?  @relation(fields: [calreserId], references: [id])
+  ComentarioRespuesta       ComentarioRespuesta?  @relation("ComentarioRespuestaToComentarioRespuesta", fields: [respuestaPadreId], references: [id])
+  other_ComentarioRespuesta ComentarioRespuesta[] @relation("ComentarioRespuestaToComentarioRespuesta")
+}
+
 model ComprobanteDePago {
   id                 Int       @id @default(autoincrement())
   fecha_emision      DateTime  @default(now())
   id_orden           Int
   numero_transaccion String
+  saldo              Float
   OrdenPago          OrdenPago @relation(fields: [id_orden], references: [id])
 }
 
@@ -208,6 +221,15 @@ model LicenciaConducir {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime
   Usuario          Usuario           @relation(fields: [usuarioId], references: [id])
+}
+
+model Mantenimiento {
+  id                Int       @id @default(autoincrement())
+  id_carro          Int
+  fecha_vencimiento DateTime?
+  completado        Boolean   @default(false)
+  descripcion       String?
+  Carro             Carro     @relation(fields: [id_carro], references: [id])
 }
 
 model Notificacion {
@@ -416,6 +438,7 @@ model Usuario {
   fecha_actualizacion                                            DateTime?
   fecha_creacion                                                 DateTime?                  @default(now())
   ocupacion                                                      String?
+  ultimaSesion                                                   DateTime?
   Asociacion_Asociacion_driverIdToUsuario                        Asociacion[]               @relation("Asociacion_driverIdToUsuario")
   Asociacion_Asociacion_renterIdToUsuario                        Asociacion[]               @relation("Asociacion_renterIdToUsuario")
   Calificacion                                                   Calificacion[]
@@ -438,10 +461,6 @@ model Usuario {
   Transaccion                                                    Transaccion[]
   Ciudad                                                         Ciudad?                    @relation(fields: [id_ciudad], references: [id])
   UsuarioRol                                                     UsuarioRol[]
-  calificacionhost_calificacionhost_id_hostToUsuario             calificacionhost[]         @relation("calificacionhost_id_hostToUsuario")
-  calificacionhost_calificacionhost_id_renterToUsuario           calificacionhost[]         @relation("calificacionhost_id_renterToUsuario")
-  comentariohost_comentariohost_id_hostToUsuario                 comentariohost[]           @relation("comentariohost_id_hostToUsuario")
-  comentariohost_comentariohost_id_renterToUsuario               comentariohost[]           @relation("comentariohost_id_renterToUsuario")
   comentarios                                                    comentarios[]
 }
 
@@ -582,26 +601,6 @@ model tiposeguro {
   cantidadCobertura String?      @db.VarChar(255)
   valides           String?      @db.VarChar(255)
   SeguroCarro       SeguroCarro? @relation(fields: [segurocarro_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model calificacionhost {
-  id                                          Int       @id @default(autoincrement())
-  id_host                                     Int
-  id_renter                                   Int
-  calificacion                                Int
-  fecha                                       DateTime? @default(now()) @db.Timestamp(6)
-  Usuario_calificacionhost_id_hostToUsuario   Usuario   @relation("calificacionhost_id_hostToUsuario", fields: [id_host], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_calificacionhost_host")
-  Usuario_calificacionhost_id_renterToUsuario Usuario   @relation("calificacionhost_id_renterToUsuario", fields: [id_renter], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_calificacionhost_renter")
-}
-
-model comentariohost {
-  id                                        Int       @id @default(autoincrement())
-  id_host                                   Int
-  id_renter                                 Int
-  comentario                                String
-  fecha                                     DateTime? @default(now()) @db.Timestamp(6)
-  Usuario_comentariohost_id_hostToUsuario   Usuario   @relation("comentariohost_id_hostToUsuario", fields: [id_host], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comentariohost_host")
-  Usuario_comentariohost_id_renterToUsuario Usuario   @relation("comentariohost_id_renterToUsuario", fields: [id_renter], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comentariohost_renter")
 }
 
 enum CategoriaLicencia {
