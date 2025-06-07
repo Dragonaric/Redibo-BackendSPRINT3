@@ -14,18 +14,19 @@ const calificacionValidations = [
   body('id_reserva').isInt().withMessage('El ID de la reserva es requerido')
 ];
 
-// Obtener calificaciones por host
 router.get('/', authenticateToken, async (req, res) => {
   const { hostId, usuarioId } = req.query;
 
   try {
     if (hostId) {
-      // Calificaciones por host
       const calificaciones = await prisma.calificacionReserva.findMany({
         where: {
           reserva: {
             Carro: {
               id_usuario_rol: parseInt(hostId)
+            },
+            Usuario: {
+              estadoBloqueo: 'ACTIVO'
             }
           }
         },
@@ -44,11 +45,13 @@ router.get('/', authenticateToken, async (req, res) => {
       });
       return res.json(calificaciones);
     } else if (usuarioId) {
-      // Calificaciones por arrendatario
       const calificaciones = await prisma.calificacionReserva.findMany({
         where: {
           reserva: {
-            id_usuario: parseInt(usuarioId)
+            id_usuario: parseInt(usuarioId),
+            Usuario: {
+              estadoBloqueo: 'ACTIVO'
+            }
           }
         },
         include: {
@@ -85,7 +88,7 @@ router.get('/count-pending-host', authenticateToken, async (req, res) => {
     return res.status(400).json({ error: 'ID de host inválido o faltante en la consulta.' });
   }
 
-  const parsedHostId = parseInt(hostId); // Parsear a entero
+  const parsedHostId = parseInt(hostId); 
 
   
   if (req.user && req.user.id !== parsedHostId) {
@@ -146,7 +149,7 @@ router.get('/count-pending-host', authenticateToken, async (req, res) => {
   }
 });
 
-// Crear nueva calificación
+
 router.post('/', authenticateToken, calificacionValidations, async (req, res) => {
   try {
     const { 
@@ -157,7 +160,6 @@ router.post('/', authenticateToken, calificacionValidations, async (req, res) =>
       id_reserva 
     } = req.body;
 
-    // Verificar si la reserva existe y pertenece al usuario
     const reserva = await prisma.reserva.findUnique({
       where: { id: parseInt(id_reserva) },
       include: { Carro: true }
@@ -167,7 +169,6 @@ router.post('/', authenticateToken, calificacionValidations, async (req, res) =>
       return res.status(404).json({ error: 'Reserva no encontrada' });
     }
 
-    // Verificar si el usuario es el dueño del carro
     if (reserva.Carro.id_usuario_rol !== req.user.id) {
       return res.status(403).json({ error: 'No tienes permiso para calificar esta reserva' });
     }
@@ -220,7 +221,6 @@ router.put('/:id', authenticateToken, [
       comentario 
     } = req.body;
 
-    // Verificar si la calificación existe y pertenece al usuario
     const calificacionExistente = await prisma.calificacionReserva.findUnique({
       where: { id: parseInt(id) },
       include: {
