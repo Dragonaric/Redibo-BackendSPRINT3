@@ -7,8 +7,8 @@ const fullCarService = require('../services/fullCarService');
  * Controlador para crear un carro completo sin imágenes.
  */
 const createFullCarHandler = asyncHandler(async (req, res) => {
-  const id_usuario_rol = req.user?.id_usuario_rol;
-  if (!id_usuario_rol) {
+  const id_usuario = req.user?.id_usuario;
+  if (!id_usuario) {
     return res
       .status(403)
       .json({ success: false, message: 'No tienes permiso para realizar esta acción.' });
@@ -46,7 +46,7 @@ const createFullCarHandler = asyncHandler(async (req, res) => {
       marca,
       modelo,
       placa,
-      id_usuario_rol,
+      id_usuario, // Actualizado para usar id_usuario
       asientos,
       puertas,
       soat,

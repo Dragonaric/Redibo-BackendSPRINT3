@@ -12,10 +12,10 @@ router.use('/v2', par3Routes); // Esto hará que las rutas de seguros sean /api/
 // Middleware global para manejar errores específicos de sprinteros
 router.use('/filterU5', filterU5Module.controller);
 router.use((err, req, res, next) => {
-  console.error('Error en sprinteros:', err.stack);                                                                                                                        
+  console.error('Error en Sprinteros:', err.stack);                                                                                                                        
   res.status(err.status || 500).json({
     success: false,
-    message: err.message || 'Error interno en sprinteros',
+    message: err.message || 'Error interno en Sprinteros',
   });
 });
 

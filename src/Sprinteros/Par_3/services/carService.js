@@ -1,6 +1,5 @@
 const prisma = require('../../../config/prisma'); // Instancia única compartida
 const { CarServiceError } = require('../errors/customErrors');
-
 /**
  * Obtiene la lista de carros, permitiendo la paginación y filtrado por host.
  * @param {Object} params - Parámetros de consulta.
