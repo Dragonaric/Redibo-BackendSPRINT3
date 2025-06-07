@@ -326,6 +326,7 @@ model Usuario {
   RespuestaComentarioCarro RespuestaComentarioCarro[]
   Transacciones            Transaccion[]
   ultimaSesion             DateTime?
+  estadoBloqueo            EstadoBloqueo        @default(ACTIVO)
 }
 
 model SolicitudConductor {
@@ -658,6 +659,12 @@ enum Genero {
   MASCULINO
   FEMENINO
   OTRO
+}
+
+enum EstadoBloqueo {
+  ACTIVO
+  BLOQUEADO
+  SUSPENDIDO
 }
 
 enum Roles {
