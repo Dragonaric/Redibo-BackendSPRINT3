@@ -18,19 +18,19 @@ router.get("/", async (req, res) => {
   try {
     const { reportadoId, reportadorId, estado } = req.query
 
-    // Verificar autenticación
+    
     const userId = getUserId(req)
     if (!userId) {
       return res.status(401).json({ error: "No autorizado" })
     }
 
-    // Construir cláusula where
+    
     const where = {}
     if (reportadoId) where.id_reportado = Number.parseInt(reportadoId)
     if (reportadorId) where.id_reportador = Number.parseInt(reportadorId)
     if (estado) where.estado = estado
 
-    // Obtener reportes
+    
     const reportes = await prisma.reporte.findMany({
       where,
       include: {
@@ -68,13 +68,13 @@ router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params
 
-    // Verificar autenticación
+    
     const userId = getUserId(req)
     if (!userId) {
       return res.status(401).json({ error: "No autorizado" })
     }
 
-    // Obtener reporte
+    
     const reporte = await prisma.reporte.findUnique({
       where: { id: Number.parseInt(id) },
       include: {
@@ -101,7 +101,7 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ error: "Reporte no encontrado" })
     }
 
-    // Verificar que el usuario es el reportador o el reportado
+   
     if (reporte.id_reportador !== Number.parseInt(userId) && reporte.id_reportado !== Number.parseInt(userId)) {
       return res.status(403).json({ error: "No autorizado para ver este reporte" })
     }
@@ -118,13 +118,13 @@ router.post("/", reporteValidations, async (req, res) => {
   try {
     const { id_reportado, motivo, informacion_adicional } = req.body
 
-    // Verificar autenticación
+    
     const userId = getUserId(req)
     if (!userId) {
       return res.status(401).json({ error: "No autorizado" })
     }
 
-    // Verificar que el usuario reportado existe
+    
     const usuarioReportado = await prisma.usuario.findUnique({
       where: { id: Number.parseInt(id_reportado) },
     })
@@ -133,12 +133,12 @@ router.post("/", reporteValidations, async (req, res) => {
       return res.status(404).json({ error: "Usuario reportado no encontrado" })
     }
 
-    // Verificar que no se está reportando a sí mismo
+    
     if (Number.parseInt(id_reportado) === Number.parseInt(userId)) {
       return res.status(400).json({ error: "No puedes reportarte a ti mismo" })
     }
 
-    // Crear reporte
+    
     const nuevoReporte = await prisma.reporte.create({
       data: {
         id_reportado: Number.parseInt(id_reportado),
@@ -169,6 +169,20 @@ router.post("/", reporteValidations, async (req, res) => {
       },
     })
 
+    
+    const reportesActivos = await prisma.reporte.count({
+      where: {
+        id_reportado: Number.parseInt(id_reportado),
+        estado: { in: ["PENDIENTE", "EN_REVISION"] }
+      }
+    })
+    if (reportesActivos >= 1) {
+      await prisma.usuario.update({
+        where: { id: Number.parseInt(id_reportado) },
+        data: { estadoBloqueo: "BLOQUEADO" }
+      })
+    }
+
     return res.status(201).json(nuevoReporte)
   } catch (error) {
     console.error("Error al crear reporte:", error)
@@ -182,13 +196,13 @@ router.put("/:id", reporteValidations, async (req, res) => {
     const { id } = req.params
     const { estado, informacion_adicional } = req.body
 
-    // Verificar autenticación
+   
     const userId = getUserId(req)
     if (!userId) {
       return res.status(401).json({ error: "No autorizado" })
     }
 
-    // Verificar que el reporte existe
+    
     const reporte = await prisma.reporte.findUnique({
       where: { id: Number.parseInt(id) },
     })
@@ -197,13 +211,12 @@ router.put("/:id", reporteValidations, async (req, res) => {
       return res.status(404).json({ error: "Reporte no encontrado" })
     }
 
-    // Solo el reportador puede actualizar la información adicional
-    // y solo un administrador podría cambiar el estado (esto requeriría verificación de rol)
+    
     if (reporte.id_reportador !== Number.parseInt(userId)) {
       return res.status(403).json({ error: "No autorizado para actualizar este reporte" })
     }
 
-    // Actualizar reporte
+    
     const reporteActualizado = await prisma.reporte.update({
       where: { id: Number.parseInt(id) },
       data: {
@@ -278,5 +291,28 @@ router.delete("/:id", async (req, res) => {
     return res.status(500).json({ error: "Error al eliminar reporte" })
   }
 })
+
+// GET /api/reportes/usuario-bloqueado/:id
+router.get('/usuario-bloqueado/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: Number.parseInt(id) },
+      select: { estadoBloqueo: true }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    return res.json({
+      bloqueado: usuario.estadoBloqueo === 'BLOQUEADO',
+      estado: usuario.estadoBloqueo
+    });
+  } catch (error) {
+    console.error('Error al verificar estado de bloqueo:', error);
+    return res.status(500).json({ error: 'Error al verificar estado de bloqueo' });
+  }
+});
 
 module.exports = router

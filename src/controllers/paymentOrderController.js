@@ -43,9 +43,9 @@ exports.createPaymentOrder = async (req, res) => {
 
 exports.RegisterTransactionNumber = async (req, res) => {
   try {
-    const { codigo_orden_pago, numero_transaccion } = req.body;
+    const { codigo_orden_pago, numero_transaccion, monto_a_pagar } = req.body;
     // Validar que se recibieron los datos necesarios
-    if (!codigo_orden_pago || !numero_transaccion) {
+    if (!codigo_orden_pago || !numero_transaccion || !monto_a_pagar) {
       return res.status(400).json({ error: 'Faltan datos necesarios' });
     }
     
@@ -69,7 +69,8 @@ exports.RegisterTransactionNumber = async (req, res) => {
             codigo: codigo_orden_pago
           }
         },
-        numero_transaccion: numeroTransaccion
+        numero_transaccion: numeroTransaccion,
+        saldo: monto_a_pagar
       },
     });
     
@@ -80,6 +81,93 @@ exports.RegisterTransactionNumber = async (req, res) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
+
+exports.PayWithBalance = async (req, res) => {
+  try {
+    const { codigo_orden_pago } = req.body;
+    const userId = req.user.id;
+
+    if (!codigo_orden_pago) {
+      return res.status(200).json({ error: 'Código de orden de pago requerido' });
+    }
+
+    const ordenPago = await prisma.ordenPago.findUnique({
+      where: {
+        codigo: codigo_orden_pago
+      }
+    });
+
+    if (!ordenPago) {
+      return res.status(200).json({ error: 'Orden de pago no encontrada' });
+    }
+
+    if (ordenPago.estado !== 'PENDIENTE') {
+      return res.status(200).json({ error: 'La orden de pago no está en estado pendiente' });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: {
+        id: userId
+      },
+      select: {
+        saldo: true
+      }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (usuario.saldo < ordenPago.monto_a_pagar) {
+      return res.status(200).json({ 
+        error: 'Saldo insuficiente',
+        saldo_actual: usuario.saldo,
+        monto_requerido: ordenPago.monto_a_pagar
+      });
+    }
+
+    // Generar número de transacción único para pago con saldo
+    const numeroTransaccion = `SALDO-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    await prisma.usuario.update({
+      where: {
+        id: userId
+      },
+      data: {
+        saldo: {
+          decrement: ordenPago.monto_a_pagar
+        }
+      }
+    });
+
+    await prisma.ordenPago.update({
+      where: {
+        codigo: codigo_orden_pago
+      },
+      data: {
+        estado: 'COMPLETADO',
+      }
+    });
+
+    const comprobantePago = await prisma.comprobanteDePago.create({
+      data: {
+        id_orden: ordenPago.id,
+        numero_transaccion: numeroTransaccion,
+        saldo: ordenPago.monto_a_pagar
+      }
+    });
+
+    return res.status(200).json({
+      message: 'Pago procesado exitosamente',
+      comprobante: comprobantePago,
+      nuevo_saldo: usuario.saldo - ordenPago.monto_a_pagar
+    });
+
+  } catch (error) {
+    console.error('Error al procesar pago con saldo:', error);
+    return res.status(500).json({ error: 'Error interno del servidor' });
+  }
+};
 
 exports.getListPaymentOrders = async (req, res) => {
   try {
@@ -351,3 +439,106 @@ exports.UpdateStatePaymentOrder = async (req, res) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
+
+// Crear solicitud de recarga
+exports.crearRecarga = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { monto, numeroTransaccion, banco } = req.body;
+
+    if (!monto || typeof monto !== 'number' || monto <= 0) {
+      return res.status(200).json({ 
+        error: 'El monto debe ser un número mayor a 0' 
+      });
+    }
+    if (monto < 10) {
+      return res.status(200).json({ 
+        error: 'El monto mínimo es de 10 BOB' 
+      });
+    }
+    if (monto > 10000) {
+      return res.status(200).json({ 
+        error: 'El monto máximo es de 10,000 BOB' 
+      });
+    }
+
+    if (!/^\d{8,32}$/.test(numeroTransaccion)) {
+      return res.status(200).json({ 
+        error: 'El número de transacción debe tener entre 8 y 32 dígitos' 
+      });
+    }
+
+    const bancosPermitidos = ['BCP', 'YAPE', 'Banco Unión'];
+    if (!bancosPermitidos.includes(banco)) {
+      return res.status(200).json({ 
+        error: 'Banco no válido' 
+      });
+    }
+
+    // Verificar que el usuario existe
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId }
+    });
+    if (!usuario) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+    }
+
+    const transaccionExistente = await prisma.transaccion.findFirst({
+      where: {
+        numeroTransaccion: numeroTransaccion,
+        estado: {
+          in: ['PENDIENTE', 'COMPLETADA']
+        }
+      }
+    });
+    if (transaccionExistente) {
+      return res.status(200).json({ 
+        error: 'Ya existe una transacción con este número' 
+      });
+    }
+
+    const nuevaTransaccion = await prisma.transaccion.create({
+      data: {
+        monto: monto,
+        tipo: 'SUBIDA',
+        estado: 'PENDIENTE',
+        numeroTransaccion: numeroTransaccion,
+        userId: userId
+      },
+      include: {
+        usuario: {
+          select: {
+            id: true,
+            nombre: true,
+            correo: true
+          }
+        }
+      }
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Solicitud de recarga creada exitosamente',
+      data: {
+        transaccion: {
+          id: nuevaTransaccion.id,
+          monto: nuevaTransaccion.monto,
+          estado: nuevaTransaccion.estado,
+          tipo: nuevaTransaccion.tipo,
+          banco: banco,
+          fechaCreacion: nuevaTransaccion.createdAt
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al crear solicitud de recarga:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};

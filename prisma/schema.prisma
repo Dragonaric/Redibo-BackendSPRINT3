@@ -326,6 +326,7 @@ model Usuario {
   RespuestaComentarioCarro RespuestaComentarioCarro[]
   Transacciones            Transaccion[]
   ultimaSesion             DateTime?
+  estadoBloqueo            EstadoBloqueo        @default(ACTIVO)
 }
 
 model SolicitudConductor {
@@ -569,8 +570,18 @@ model CalificacionReserva {
   puntualidad      Int
   comentario       String?
   fecha_creacion   DateTime @default(now())
-
+  comentariosRespuesta ComentarioRespuesta[] @relation("CalificacionComentario")
   @@index([id_reserva])
+}
+
+model ComentarioRespuesta {
+  id                  Int                   @id @default(autoincrement())
+  comentario          String
+  calreserId          Int?
+  respuestaPadreId    Int?
+  calificacionReserva CalificacionReserva?  @relation("CalificacionComentario", fields: [calreserId], references: [id])
+  respuestaPadre      ComentarioRespuesta?  @relation("RespuestaPadre", fields: [respuestaPadreId], references: [id])
+  respuestasHijas     ComentarioRespuesta[] @relation("RespuestaPadre")
 }
 
 model ComentarioCarro {
@@ -648,6 +659,12 @@ enum Genero {
   MASCULINO
   FEMENINO
   OTRO
+}
+
+enum EstadoBloqueo {
+  ACTIVO
+  BLOQUEADO
+  SUSPENDIDO
 }
 
 enum Roles {
