@@ -5,7 +5,6 @@ const { authenticateToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-// Validaciones para el registro de usuario
 const registerValidations = [
   body('nombre').notEmpty().withMessage('El nombre es obligatorio')
     .isLength({ min: 3 }).withMessage('El nombre debe tener al menos 3 caracteres'),
@@ -44,10 +43,22 @@ router.post('/registro', registerValidations, userController.registerUser);
 // Ruta para obtener el perfil del usuario
 router.get('/perfil', authenticateToken, userController.getUserProfile);
 
+//update profile
+router.post('/update-profile', authenticateToken, userController.updateProfile);
+
 // Ruta para agregar un nuevo rol de usuario
 router.post('/add-rol', authenticateToken, userController.addUserRole);
 
 //Ruta para obtener el saldo de un usuario
 router.get('/get-saldo', authenticateToken, userController.getUserBalance);
+
+// Ruta para validar la contraseña actual del usuario
+router.post("/validate-password", authenticateToken, userController.validateCurrentPassword);
+
+// Ruta para actualizar la contraseña del usuario
+router.put("/update-password", authenticateToken, userController.updatePassword);
+
+// Ruta para verificar si el usuario tiene una contraseña
+router.get('/check-user-password', authenticateToken, userController.checkUserHasPassword);
 
 module.exports = router;

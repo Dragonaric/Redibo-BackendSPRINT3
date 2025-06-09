@@ -12,7 +12,14 @@ const reservasRoutes = require("./routes/reservasRoutes");
 const reporteRoutes = require("./routes/reporteRoutes");
 const comentariosCarroRoutes = require("./routes/comentariosCarroRoutes");
 const calificacionesReservaRoutes = require("./routes/calificaciones-reservaRoutes");
+const comentariosRespuestasRoutes = require("./routes/comentarioRespuestas");
 const carroRoutes = require("./routes/carroRoute");
+const calendarRoutes = require("./routes/calendarRoutes");
+const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
+const { notificarMantenimientosVencidos } = require('./lib/prisma');
+const cron = require('node-cron');
+
+
 
 // Configuración de middlewares específicos para CodeZen
 
@@ -27,6 +34,7 @@ router.use(
 );
 
 // Montar las rutas
+router.use("/users", userRoutes);
 router.use("/usuarios", usuariosRoutes);
 router.use("/", cityRoutes);
 router.use("/auth", authRoutes);
@@ -35,13 +43,26 @@ router.use("/reservas", reservasRoutes);
 router.use("/reportes", reporteRoutes);
 router.use("/comentarios-carro", comentariosCarroRoutes);
 router.use("/calificaciones-reserva", calificacionesReservaRoutes);
+router.use("/comentarioRespuestas",comentariosRespuestasRoutes );
 router.use("/carros", carroRoutes);
+router.use("/calendar", calendarRoutes);
+router.use("/mantenimiento", mantenimientoRoutes);
+
 
 // Ruta principal del módulo CodeZen
 router.get("/", (req, res) => {
   res.send("Módulo CodeZen está funcionando");
 });
-
+// Programar la tarea para que se ejecute cada hora
+cron.schedule('0 * * * *', async () => {
+  console.log('Ejecutando notificación de mantenimientos vencidos...');
+  try {
+    await notificarMantenimientosVencidos();
+    console.log('Notificaciones de mantenimientos vencidos enviadas.');
+  } catch (error) {
+    console.error('Error al enviar notificaciones de mantenimientos vencidos:', error);
+  }
+});
 // Manejo de errores específico para CodeZen
 router.use((err, req, res, next) => {
   console.error('Error en CodeZen:', err.stack);

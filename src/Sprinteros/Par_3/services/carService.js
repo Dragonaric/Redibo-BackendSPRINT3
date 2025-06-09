@@ -1,6 +1,7 @@
 const prisma = require('../../../config/prisma'); // Instancia única compartida
 const { CarServiceError } = require('../errors/customErrors');
-
+const { deleteCarImage } = require('./imageService');
+const { eliminarSegurosCarroPorCarro } = require('./segurosService');
 /**
  * Obtiene la lista de carros, permitiendo la paginación y filtrado por host.
  * @param {Object} params - Parámetros de consulta.
@@ -95,7 +96,6 @@ async function updateCar(id, data) {
   }
 }
 
-
 /**
  * Manejo genérico de operaciones con Prisma para centralizar el tratamiento de errores.
  * @param {Function} operation - Operación a ejecutar (retorna una Promise).
@@ -113,14 +113,92 @@ async function handlePrismaOperation(operation) {
 }
 
 /**
+ * Elimina todas las dependencias de un carro antes de eliminarlo
+ * @param {number} carId - ID del carro
+ */
+async function deleteCarDependencies(carId) {
+  try {
+    // 1. Eliminar imágenes
+    const images = await prisma.imagen.findMany({
+      where: { id_carro: carId },
+      select: { id: true }
+    });
+    for (const image of images) {
+      await deleteCarImage(image.id);
+    }
+
+    // 2. Eliminar seguros del carro
+    await eliminarSegurosCarroPorCarro(carId);
+
+    // 3. Eliminar calificaciones
+    await prisma.calificacion.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 4. Eliminar favoritos
+    await prisma.favorito.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 5. Eliminar reservas
+    await prisma.reserva.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 6. Eliminar características adicionales
+    await prisma.caracteristicasAdicionalesCarro.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 7. Eliminar contratos de alquiler
+    await prisma.contratodeAlquiler.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 8. Eliminar órdenes de pago
+    await prisma.ordenPago.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 9. Eliminar comentarios del carro
+    await prisma.comentarioCarro.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 10. Eliminar mantenimientos
+    await prisma.mantenimiento.deleteMany({
+      where: { id_carro: carId }
+    });
+
+    // 11. Eliminar combustible del carro
+    await prisma.combustibleCarro.deleteMany({
+      where: { id_carro: carId }
+    });
+
+  } catch (error) {
+    throw new CarServiceError(`Error al eliminar dependencias del carro: ${error.message}`, 'DEPENDENCY_DELETE_ERROR', error);
+  }
+}
+
+/**
  * Elimina un carro por su ID.
  * @param {number|string} id - ID del carro a eliminar.
  * @returns {Object} Resultado de la eliminación.
  */
 async function deleteCar(id) {
-  return handlePrismaOperation(() =>
-    prisma.carro.delete({ where: { id: Number(id) } })
-  );
+  const carId = Number(id);
+  
+  try {
+    // Primero eliminamos todas las dependencias
+    await deleteCarDependencies(carId);
+    
+    // Finalmente eliminamos el carro
+    return await prisma.carro.delete({ 
+      where: { id: carId }
+    });
+  } catch (error) {
+    throw new CarServiceError(`Error al eliminar el carro: ${error.message}`, 'DELETE_ERROR', error);
+  }
 }
 
 module.exports = { getCars, createCar, getCarById, updateCar, deleteCar };

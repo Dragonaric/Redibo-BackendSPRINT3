@@ -25,7 +25,7 @@ function generarValoresAleatorios() {
 
 async function main() {
   // 1) Crear o recuperar los roles base
-  const rolesBase = ['RENTER', 'HOST','DRIVER'];
+  const rolesBase = ['RENTER', 'HOST','DRIVER', 'ADMIN'];
   const roles: Record<string, { id: number; rol: string }> = {};
 
   for (const rolName of rolesBase) {
@@ -36,9 +36,18 @@ async function main() {
     roles[rolName] = rol;
   }
 
-  // 2) Asignar a cada usuario el rol de "host"
+  // 2) Asignar a cada usuario el rol de "host" Y al id 8 ponerle rol de administrador
   const usuarios = await prisma.usuario.findMany();
   for (const usuario of usuarios) {
+    if (usuario.id === 8) {
+      // Asignar rol de ADMIN al usuario con id 8
+      let ur = await prisma.usuarioRol.create({
+        data: {
+          id_usuario: usuario.id,
+          id_rol: roles['ADMIN'].id,
+        },
+      });
+    }  
     let ur = await prisma.usuarioRol.findFirst({
       where: {
         id_usuario: usuario.id,

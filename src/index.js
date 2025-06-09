@@ -14,18 +14,28 @@ dotenv.config();
 const userRoutes = require('./routes/userRoutes');
 const cityRoutes = require('./routes/cityRoutes');
 const authRoutes = require('./routes/authRoutes');
-const garantiaRouter  = require('./routes/garantias');
+const garantiaRouter = require('./routes/garantias');
+const paymentVoucherRoutes = require('./routes/paymentVoucherRoutes');
+const transaccionesRoutes = require('./routes/transaccionesRoutes');
+const pdfRoutes = require('./routes/pdfRoutes');
 
 const sprinterosRoutes = require('./Sprinteros'); // Importar las rutas de sprinteros
 const OrdenPagoRoutes = require('./routes/paymentOrderRoutes');
+const uploadRoutes = require("./routes/uploadRoutes");
+const sessionRoutes = require("./routes/sessionRoutes");
+const licenseRoutes = require("./routes/licenseRoutes");
 const CodezenRoutes = require('./Codezen');
+const driversRoutes = require('./routes/driversRoutes');
+const searchesRoutes = require('./routes/busquedasRoutes');
+const busquedasRoutes = require('./routes/busquedasRoutes');
 
 const { carRouter } = require("./routes/cars");
 const { airportRouter } = require("./routes/airports");
 const { reservationRouter } = require("./routes/reservation");
 const { searchRouter } = require("./routes/search");
 const { userRouter } = require("./routes/users");
-
+const associationRoutes = require('./routes/associationRoutes');
+const { transaccion } = require('./config/prisma');
 const app = express();
 
 const allowedOrigins = [
@@ -63,19 +73,29 @@ app.use('/api', cityRoutes);
 app.use('/api/auth', authRoutes);
 
 app.use('/api', sprinterosRoutes);
-
+app.use('/api', transaccionesRoutes)
 app.use('/api', OrdenPagoRoutes);
+
+app.use('/api', paymentVoucherRoutes);
+app.use('/api', pdfRoutes);
+app.use("/api", uploadRoutes);
+app.use("/api", sessionRoutes);
+app.use("/api", licenseRoutes);
+
+app.use('/api', CodezenRoutes);
+
+app.use("/api", associationRoutes);
+
+app.use("/api", driversRoutes);
+app.use("/api", searchesRoutes);
+app.use("/api", busquedasRoutes);
+
 app.use('/api/cars', carRouter)
 app.use('/api/airports', airportRouter)
 app.use('/api/reservations', reservationRouter)
 app.use('/api/search', searchRouter)
 app.use('/api/users', userRouter)
 app.use('/api/garantias', garantiaRouter);
-
-
-app.use('/api', CodezenRoutes);
-
-
 // Puerto
 const PORT = process.env.PORT || 4000;
 

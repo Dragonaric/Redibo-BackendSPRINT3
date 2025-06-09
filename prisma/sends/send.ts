@@ -91,6 +91,33 @@ async function main() {
       id_ciudad: ciudadesBD.find((d) => d.nombre === 'Potosí')?.id,
       correo: 'patricia.diaz@example.com',
     },
+    {
+      nombre: 'Renter Tucumanas',
+      genero: Genero.OTRO,
+      fecha_nacimiento: new Date('1993-09-27'),
+      contraseña: '$2b$10$rKh4YJSaCJag0l3UAHIeo.0gBrE7XH/QEm/ZBPjDkCDGLZS5j1vZy', 
+      telefono: '66666666',
+      id_ciudad: ciudadesBD.find((d) => d.nombre === 'Potosí')?.id,
+      correo: 'admin@gmail.com',
+    },
+    {
+      nombre: 'Host Tucumanas',
+      genero: Genero.OTRO,
+      fecha_nacimiento: new Date('1993-09-27'),
+      contraseña: '$2b$10$HgqpO/h/yqOh25wXrlRotONisbdpyFpb2sbqWoW3OZ7KpB3Dt4Y4e',
+      telefono: '66666667',
+      id_ciudad: ciudadesBD.find((d) => d.nombre === 'Potosí')?.id,
+      correo: 'host@gmail.com',
+    },
+    {
+      nombre: 'Admin Tucumanas',
+      genero: Genero.OTRO,
+      fecha_nacimiento: new Date('1993-09-27'),
+      contraseña: '$2b$10$3mvTMaCOV/twjtQMVk2Sy.21lfQmUeS6Tny9jk9XgXCjVmb4q3Q4W', // Cambiado
+      telefono: '66666668',
+      id_ciudad: ciudadesBD.find((d) => d.nombre === 'Potosí')?.id,
+      correo: 'admin@gmail.com',
+    },
   ] as const;
 
   for (const u of usuariosSeed) {

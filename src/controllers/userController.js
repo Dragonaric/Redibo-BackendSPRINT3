@@ -347,6 +347,7 @@ exports.getUserProfile = async (req, res) => {
       select: {
         id: true,
         nombre: true,
+        estadoConductor: true,
         correo: true,
         fecha_nacimiento: true,
         genero: true,
@@ -852,6 +853,13 @@ exports.addUserRole = async (req, res) => {
         id_rol: rolData.id
       }
     });
+
+    if (req.body.rol === 'DRIVER') {
+      await prisma.usuario.update({
+        where: { id: id_usuario },
+        data: { estadoConductor: 'APPROVED' }
+      });
+    }
     
     return res.status(200).json({
       message: 'Rol agregado exitosamente',
@@ -887,3 +895,242 @@ exports.getUserBalance = async (req, res) => {
     return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
+
+exports.updateProfile = async (req, res) => {
+  const userId = req.user.id;
+  const updateData = req.body;
+  
+  try {
+    // Campos que no se pueden actualizar
+    const restrictedFields = ['id', 'correo', 'google_id', 'saldo', 'roles'];
+    
+    // Filtrar campos permitidos
+    const allowedFields = Object.keys(updateData).filter(
+      key => !restrictedFields.includes(key)
+    );
+
+    // Objeto para almacenar los datos de actualización
+    const updatePayload = {};
+    
+    // Procesar cada campo permitido
+    for (const field of allowedFields) {
+      switch (field) {
+        case 'fecha_nacimiento':
+          // Convertir fecha de formato DD/MM/YYYY a Date
+          const [day, month, year] = updateData[field].split('/');
+          const fecha = new Date(Number(year), Number(month) - 1, Number(day));
+          updatePayload[field] = fecha;
+          break;
+          
+        case 'ciudad':
+          const ciudadEncontrada = await prisma.ciudad.findFirst({
+            where: {
+              nombre: {
+                equals: updateData.ciudad,
+                mode: 'insensitive'
+              }
+            }
+          });
+
+          if (!ciudadEncontrada) {
+            return res.status(400).json({
+              success: false,
+              message: `La ciudad '${updateData.ciudad}' no se encuentra registrada en el sistema`
+            });
+          }
+
+          updatePayload.id_ciudad = ciudadEncontrada.id;
+          break;
+          
+        case 'genero':
+          // Validar valor de enum
+          const validGenders = ['MASCULINO', 'FEMENINO', 'OTRO'];
+          if (!validGenders.includes(updateData.genero)) {
+            return res.status(400).json({ 
+              message: 'Género inválido',
+              validGenders
+            });
+          }
+          updatePayload[field] = updateData[field];
+          break;
+          
+        default:
+          // Campos regulares (nombre, telefono, etc.)
+          updatePayload[field] = updateData[field];
+      }
+    }
+    // Al final, antes de update
+    console.log('Payload final que se enviará a Prisma:', updatePayload);
+
+    // Actualizar usuario
+    const updatedUser = await prisma.Usuario.update({
+      where: { id: userId },
+      data: updatePayload,
+      select: {
+        id: true,
+        nombre: true,
+        correo: true,
+        fecha_nacimiento: true,
+        genero: true,
+        telefono: true,
+        foto: true,
+        ciudad: {
+          select: { nombre: true }
+        }
+      }
+    });
+
+    // Formatear fecha para respuesta
+    const formattedUser = {
+      ...updatedUser,
+      fecha_nacimiento: updatedUser.fecha_nacimiento
+        ? updatedUser.fecha_nacimiento.toLocaleDateString('es-ES')
+        : null
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Perfil actualizado correctamente',
+      user: formattedUser
+    });
+    
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    
+    // Manejar errores específicos
+    if (error.code === 'P2002') {
+      return res.status(400).json({
+        success: false,
+        message: 'El correo electrónico ya está en uso'
+      });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar el perfil',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+exports.validateCurrentPassword = async (req, res) => {
+  try {
+    const { currentPassword } = req.body;
+    const userId = req.user.id;
+    
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { contraseña: true }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ valid: false, message: "Usuario no encontrado" });
+    }
+
+    const bcrypt = require('bcrypt');
+    const isValid = await bcrypt.compare(currentPassword, usuario.contraseña);
+
+    if (isValid) {
+      return res.status(200).json({ valid: true });
+    } else {
+      return res.status(200).json({ valid: false, message: "Contraseña incorrecta" });
+    }
+  } catch (error) {
+    console.error("Error al validar contraseña:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+exports.updatePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const userId = req.user.id;
+    
+    const isPasswordStrong = (password) => {
+      return password.length >= 8 &&
+             /[A-Z]/.test(password) &&
+             /[0-9]/.test(password) &&
+             /[^A-Za-z0-9]/.test(password);
+    };
+
+    if (!isPasswordStrong(newPassword)) {
+      return res.status(200).json({
+        error: 'La contraseña no cumple con los requisitos de seguridad'
+      });
+    }
+
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { contraseña: true }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Usuario no encontrado" 
+      });
+    }
+
+    // Verificar que la nueva contraseña no sea igual a la actual
+    if (usuario.contraseña && usuario.contraseña.trim() !== '') {
+      const isSamePassword = await bcrypt.compare(newPassword, usuario.contraseña);
+      if (isSamePassword) {
+        return res.status(200).json({
+          error: 'La nueva contraseña no puede ser igual a la actual'
+        });
+      }
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await prisma.usuario.update({
+      where: { id: userId },
+      data: { contraseña: hashedPassword }
+    });
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Contraseña actualizada correctamente" 
+    });
+  } catch (error) {
+    console.error("Error al actualizar contraseña:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+exports.checkUserHasPassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: userId },
+      select: { 
+        contraseña: true,
+        google_id: true
+      }
+    });
+
+    if (!usuario) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Usuario no encontrado" 
+      });
+    }
+
+    // Verificar si el usuario tiene contraseña
+    const hasPassword = usuario.contraseña && usuario.contraseña.trim() !== '';
+    
+    return res.status(200).json({ 
+      success: true,
+      hasPassword: hasPassword,
+      isGoogleUser: !!usuario.google_id
+    });
+  } catch (error) {
+    console.error("Error al verificar contraseña del usuario:", error);
+    return res.status(500).json({ 
+      success: false, 
+      error: "Error interno del servidor" 
+    });
+  }
+};

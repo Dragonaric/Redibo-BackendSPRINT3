@@ -1,6 +1,6 @@
 const express = require('express');
 const carRoutes = require('./carRoutes');
-const direcRoutes = require('./direcRoutes');
+const direcRoutes = require('./direcRoutes'); // Importar las rutas de direcciones
 const imageRoutes = require('./imageRoutes');
 const catalogRoutes = require('./catalogRoutes');
 const segurosRoutes = require('./segurosRoutes'); // Importar las rutas de seguros
