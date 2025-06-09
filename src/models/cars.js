@@ -17,7 +17,7 @@ class CarModel {
         id_usuario_rol: true
       }
     })
-    return {id_host: host.id_usuario_rol};
+    return { id_host: host.id_usuario_rol };
   }
   static async getByIdCar({ id }) {
     try {
@@ -85,6 +85,7 @@ class CarModel {
       })
 
       return cars.map(car => ({
+        id: car.id,
         marca: car.marca,
         modelo: car.modelo,
         anio: car.año,
