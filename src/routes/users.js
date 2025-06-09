@@ -4,6 +4,6 @@ const { userController } = require("../controllers/users")
 
 const userRouter = Router()
 
-userRouter.get("/:id", userController.getUserData)
+userRouter.get("/users/:id", userController.getUserData)
 
 module.exports = { userRouter }

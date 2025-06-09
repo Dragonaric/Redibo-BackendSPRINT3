@@ -90,12 +90,12 @@ app.use("/api", driversRoutes);
 app.use("/api", searchesRoutes);
 app.use("/api", busquedasRoutes);
 
-app.use('/api/cars', carRouter)
-app.use('/api/airports', airportRouter)
-app.use('/api/reservations', reservationRouter)
-app.use('/api/search', searchRouter)
-app.use('/api/users', userRouter)
-app.use('/api/garantias', garantiaRouter);
+app.use('/api', carRouter)
+app.use('/api', airportRouter)
+app.use('/api', reservationRouter)
+app.use('/api', searchRouter)
+app.use('/api', userRouter)
+app.use('/api', garantiaRouter);
 // Puerto
 const PORT = process.env.PORT || 4000;
 

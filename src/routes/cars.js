@@ -3,7 +3,7 @@ const { CarController } = require("../controllers/cars");
 
 const carRouter = Router()
 
-carRouter.get('/most-rented', CarController.getMostRented)
-carRouter.get('/:id',CarController.getByIdCar)
-carRouter.get('/:id/host',CarController.getHostOfCarro)
+carRouter.get('/cars/most-rented', CarController.getMostRented)
+carRouter.get('/cars/:id', CarController.getByIdCar)
+carRouter.get('/cars/:id/host', CarController.getHostOfCarro)
 module.exports = { carRouter }

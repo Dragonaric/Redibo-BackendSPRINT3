@@ -3,6 +3,6 @@ const { AirportController } = require("../controllers/airports");
 
 const airportRouter = Router()
 
-airportRouter.get('/', AirportController.getAll)
+airportRouter.get('/airports', AirportController.getAll)
 
 module.exports = { airportRouter }
