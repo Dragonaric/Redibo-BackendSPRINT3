@@ -15,7 +15,7 @@ const reservationSchema = z.object({
   endDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: 'endDate debe ser una fecha válida'
   }),
-  estado: z.enum(['pendiente', 'confirmado', 'cancelado'], {
+  estado: z.enum(['en_curso', 'pendiente', 'confirmado', 'cancelado'], {
     required_error: 'El estado es obligatorio'
   })
 })
