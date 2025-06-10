@@ -116,7 +116,7 @@ async function main() {
       contraseña: '$2b$10$3mvTMaCOV/twjtQMVk2Sy.21lfQmUeS6Tny9jk9XgXCjVmb4q3Q4W', // Cambiado
       telefono: '66666668',
       id_ciudad: ciudadesBD.find((d) => d.nombre === 'Potosí')?.id,
-      correo: 'admin@gmail.com',
+      correo: 'superadmin@gmail.com',
     },
   ] as const;
 
